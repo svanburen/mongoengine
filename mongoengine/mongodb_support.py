@@ -1,7 +1,6 @@
 """
 Helper functions, constants, and types to aid with MongoDB version support
 """
-from __future__ import absolute_import
 from mongoengine.connection import get_connection
 
 

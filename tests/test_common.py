@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import unittest
 
 from mongoengine.common import _import_class

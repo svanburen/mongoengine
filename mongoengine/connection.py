@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from pymongo import MongoClient, ReadPreference, uri_parser
 from pymongo.database import _check_name
 
@@ -39,7 +38,7 @@ def _check_db_name(name):
     This functionality is copied from pymongo Database class constructor.
     """
     if not isinstance(name, str):
-        raise TypeError("name must be an instance of %s" % (str,))
+        raise TypeError(f"name must be an instance of {str}")
     elif name != "$external":
         _check_name(name)
 

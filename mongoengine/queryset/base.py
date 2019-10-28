@@ -1,7 +1,6 @@
 import copy
 import itertools
 import re
-import warnings
 
 import pymongo
 import pymongo.errors

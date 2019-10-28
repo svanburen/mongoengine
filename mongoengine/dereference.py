@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from bson import DBRef, SON
 
 from mongoengine.base import (
@@ -273,7 +272,7 @@ class DeReference:
                             (v["_ref"].collection, v["_ref"].id), v
                         )
                     elif isinstance(v, (dict, list, tuple)) and depth <= self.max_depth:
-                        item_name = str("{0}.{1}.{2}").format(
+                        item_name = "{0}.{1}.{2}".format(
                             name, k, field_name
                         )
                         data[k]._data[field_name] = self._attach_objects(

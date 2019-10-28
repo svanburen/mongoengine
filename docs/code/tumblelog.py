@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
 from mongoengine import *
 
 connect("tumblelog")
@@ -56,12 +54,12 @@ post2.save()
 print("ALL POSTS")
 print()
 for post in Post.objects:
-    print((post.title))
+    print(post.title)
     # print '=' * post.title.count()
-    print(("=" * 20))
+    print("=" * 20)
 
     if isinstance(post, TextPost):
-        print((post.content))
+        print(post.content)
 
     if isinstance(post, LinkPost):
         print(("Link:", post.link_url))
@@ -72,8 +70,8 @@ print()
 print("POSTS TAGGED 'MONGODB'")
 print()
 for post in Post.objects(tags="mongodb"):
-    print((post.title))
+    print(post.title)
 print()
 
 num_posts = Post.objects(tags="mongodb").count()
-print(('Found %d posts with tag "mongodb"' % num_posts))
+print('Found %d posts with tag "mongodb"' % num_posts)

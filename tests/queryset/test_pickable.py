@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import pickle
 
 from mongoengine import Document, IntField, StringField

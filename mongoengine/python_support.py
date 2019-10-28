@@ -1,7 +1,6 @@
 """
 Helper functions, constants, and types to aid with Python v2.7 - v3.x support
 """
-from __future__ import absolute_import
 import six
 
 # six.BytesIO resolves to StringIO.StringIO in Py2 and io.BytesIO in Py3.

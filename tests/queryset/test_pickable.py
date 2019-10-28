@@ -1,8 +1,7 @@
+from __future__ import absolute_import
 import pickle
-import unittest
 
 from mongoengine import Document, IntField, StringField
-from mongoengine.connection import connect
 from tests.utils import MongoDBTestCase
 
 
@@ -18,7 +17,7 @@ class TestQuerysetPickable(MongoDBTestCase):
     """
 
     def setUp(self):
-        super(TestQuerysetPickable, self).setUp()
+        super().setUp()
         self.john = Person.objects.create(name="John", age=21)
 
     def test_picke_simple_qs(self):
@@ -37,13 +36,13 @@ class TestQuerysetPickable(MongoDBTestCase):
 
         loadedQs = self._get_loaded(qs)
 
-        self.assertEqual(qs.count(), loadedQs.count())
+        assert qs.count() == loadedQs.count()
 
         # can update loadedQs
         loadedQs.update(age=23)
 
         # check
-        self.assertEqual(Person.objects.first().age, 23)
+        assert Person.objects.first().age == 23
 
     def test_pickle_support_filtration(self):
         Person.objects.create(name="Alice", age=22)
@@ -51,9 +50,9 @@ class TestQuerysetPickable(MongoDBTestCase):
         Person.objects.create(name="Bob", age=23)
 
         qs = Person.objects.filter(age__gte=22)
-        self.assertEqual(qs.count(), 2)
+        assert qs.count() == 2
 
         loaded = self._get_loaded(qs)
 
-        self.assertEqual(loaded.count(), 2)
-        self.assertEqual(loaded.filter(name="Bob").first().age, 23)
+        assert loaded.count() == 2
+        assert loaded.filter(name="Bob").first().age == 23

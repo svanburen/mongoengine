@@ -1,12 +1,9 @@
-import operator
+from __future__ import absolute_import
 import unittest
 
-from nose.plugins.skip import SkipTest
-
 from mongoengine import connect
-from mongoengine.connection import get_db, disconnect_all
+from mongoengine.connection import disconnect_all, get_db
 from mongoengine.mongodb_support import get_mongodb_version
-
 
 MONGO_TEST_DB = "mongoenginetest"  # standard name for the test database
 
@@ -58,10 +55,6 @@ def _decorated_with_ver_requirement(func, mongo_version_req, oper):
         mongodb_v = get_mongodb_version()
         if oper(mongodb_v, mongo_version_req):
             return func(*args, **kwargs)
-
-        raise SkipTest(
-            "Needs MongoDB v{}+".format(".".join(str(n) for n in mongo_version_req))
-        )
 
     _inner.__name__ = func.__name__
     _inner.__doc__ = func.__doc__

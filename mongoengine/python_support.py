@@ -1,6 +1,7 @@
 """
 Helper functions, constants, and types to aid with Python v2.7 - v3.x support
 """
+from __future__ import absolute_import
 import six
 
 # six.BytesIO resolves to StringIO.StringIO in Py2 and io.BytesIO in Py3.
@@ -16,8 +17,3 @@ if not six.PY3:
         StringIO = cStringIO.StringIO
 
 
-if six.PY3:
-    from collections.abc import Hashable
-else:
-    # raises DeprecationWarnings in Python >=3.7
-    from collections import Hashable

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 
 from pymongo import ReadPreference
@@ -32,14 +33,14 @@ class ConnectionTest(unittest.TestCase):
                 host="mongodb://localhost/mongoenginetest?replicaSet=rs",
                 read_preference=READ_PREF,
             )
-        except ConnectionFailure as e:
+        except ConnectionFailure:
             return
 
         if not isinstance(conn, CONN_CLASS):
             # really???
             return
 
-        self.assertEqual(conn.read_preference, READ_PREF)
+        assert conn.read_preference == READ_PREF
 
 
 if __name__ == "__main__":

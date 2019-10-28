@@ -1,10 +1,8 @@
 from collections import defaultdict
 
-from bson import ObjectId, SON
-from bson.dbref import DBRef
 import pymongo
-import six
-from six import iteritems
+from bson import SON, ObjectId
+from bson.dbref import DBRef
 
 from mongoengine.base import UPDATE_OPERATORS
 from mongoengine.common import _import_class
@@ -101,7 +99,7 @@ def query(_doc_cls=None, **kwargs):
             cleaned_fields = []
             for field in fields:
                 append_field = True
-                if isinstance(field, six.string_types):
+                if isinstance(field, str):
                     parts.append(field)
                     append_field = False
                 # is last and CachedReferenceField
@@ -180,7 +178,7 @@ def query(_doc_cls=None, **kwargs):
                     "$near" in value_dict or "$nearSphere" in value_dict
                 ):
                     value_son = SON()
-                    for k, v in iteritems(value_dict):
+                    for k, v in value_dict.items():
                         if k == "$maxDistance" or k == "$minDistance":
                             continue
                         value_son[k] = v
@@ -216,7 +214,7 @@ def query(_doc_cls=None, **kwargs):
         del mongo_query[k]
         if isinstance(v, list):
             value = [{k: val} for val in v]
-            if "$and" in mongo_query.keys():
+            if "$and" in list(mongo_query.keys()):
                 mongo_query["$and"].extend(value)
             else:
                 mongo_query["$and"] = value
@@ -281,7 +279,7 @@ def update(_doc_cls=None, **update):
             appended_sub_field = False
             for field in fields:
                 append_field = True
-                if isinstance(field, six.string_types):
+                if isinstance(field, str):
                     # Convert the S operator to $
                     if field == "S":
                         field = "$"
@@ -435,7 +433,7 @@ def _geo_operator(field, op, value):
             value = {"$near": _infer_geometry(value)}
         else:
             raise NotImplementedError(
-                'Geo method "%s" has not been implemented for a %s ' % (op, field._name)
+                f'Geo method "{op}" has not been implemented for a {field._name} '
             )
     return value
 

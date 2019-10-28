@@ -3,6 +3,7 @@ This test has been put into a module.  This is because it tests warnings that
 only get triggered on first hit.  This way we can ensure its imported into the
 top level and called first by the test suite.
 """
+from __future__ import absolute_import
 import unittest
 import warnings
 
@@ -31,7 +32,5 @@ class TestAllWarnings(unittest.TestCase):
             meta = {"collection": "fail"}
 
         warning = self.warning_list[0]
-        self.assertEqual(SyntaxWarning, warning["category"])
-        self.assertEqual(
-            "non_abstract_base", InheritedDocumentFailTest._get_collection_name()
-        )
+        assert SyntaxWarning == warning["category"]
+        assert "non_abstract_base" == InheritedDocumentFailTest._get_collection_name()

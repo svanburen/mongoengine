@@ -134,9 +134,3 @@ def test_big_doc():
         "Init + save to database + delete: %.3fms"
         % (timeit(create_and_delete_company, 10) * 10 ** 3)
     )
-
-
-if __name__ == "__main__":
-    test_basic()
-    print("-" * 100)
-    test_big_doc()

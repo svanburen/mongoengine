@@ -1,6 +1,7 @@
 """
 Helper functions, constants, and types to aid with PyMongo v2.7 - v3.x support.
 """
+from __future__ import absolute_import
 import pymongo
 
 _PYMONGO_37 = (3, 7)

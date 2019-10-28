@@ -6,7 +6,7 @@ from mongoengine.queryset import transform
 __all__ = ("Q", "QNode")
 
 
-class QNodeVisitor(object):
+class QNodeVisitor:
     """Base visitor class for visiting Q-object nodes in a query tree.
     """
 
@@ -78,7 +78,7 @@ class QueryCompilerVisitor(QNodeVisitor):
         return transform.query(self.document, **query.query)
 
 
-class QNode(object):
+class QNode:
     """Base class for nodes in query trees."""
 
     AND = 0

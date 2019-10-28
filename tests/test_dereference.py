@@ -1,10 +1,10 @@
 import unittest
 
 from bson import DBRef, ObjectId
+from six.moves import range
 
 from mongoengine import *
 from mongoengine.context_managers import query_counter
-from six.moves import range
 
 
 class FieldTest(unittest.TestCase):

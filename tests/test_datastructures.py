@@ -1,8 +1,9 @@
 import unittest
 
-from mongoengine import Document
-from mongoengine.base.datastructures import StrictDict, BaseList, BaseDict
 import pytest
+
+from mongoengine import Document
+from mongoengine.base.datastructures import BaseDict, BaseList, StrictDict
 
 
 class DocumentStub:

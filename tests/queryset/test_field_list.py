@@ -1,8 +1,9 @@
 import unittest
 
+import pytest
+
 from mongoengine import *
 from mongoengine.queryset import QueryFieldList
-import pytest
 
 
 class TestQueryFieldList(unittest.TestCase):

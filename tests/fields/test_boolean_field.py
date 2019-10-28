@@ -1,7 +1,7 @@
-from mongoengine import *
-
-from tests.utils import MongoDBTestCase, get_as_pymongo
 import pytest
+
+from mongoengine import *
+from tests.utils import MongoDBTestCase, get_as_pymongo
 
 
 class TestBooleanField(MongoDBTestCase):

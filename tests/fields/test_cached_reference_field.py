@@ -1,9 +1,9 @@
 from decimal import Decimal
 
-from mongoengine import *
-
-from tests.utils import MongoDBTestCase
 import pytest
+
+from mongoengine import *
+from tests.utils import MongoDBTestCase
 
 
 class TestCachedReferenceField(MongoDBTestCase):

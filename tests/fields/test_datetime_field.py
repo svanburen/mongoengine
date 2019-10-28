@@ -1,17 +1,19 @@
 import datetime as dt
+
+import pytest
 import six
 from six.moves import range
+
+from mongoengine import *
+from mongoengine import connection
+from tests.utils import MongoDBTestCase
 
 try:
     import dateutil
 except ImportError:
     dateutil = None
 
-from mongoengine import *
-from mongoengine import connection
 
-from tests.utils import MongoDBTestCase
-import pytest
 
 
 class TestDateTimeField(MongoDBTestCase):

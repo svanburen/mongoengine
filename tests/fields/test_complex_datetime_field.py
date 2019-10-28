@@ -1,13 +1,12 @@
 import datetime
-import math
 import itertools
+import math
 import re
 
-from mongoengine import *
+from six.moves import map, range
 
+from mongoengine import *
 from tests.utils import MongoDBTestCase
-from six.moves import map
-from six.moves import range
 
 
 class ComplexDateTimeFieldTest(MongoDBTestCase):

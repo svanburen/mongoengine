@@ -1,9 +1,8 @@
+import pytest
 from bson import SON, DBRef
 
 from mongoengine import *
-
 from tests.utils import MongoDBTestCase
-import pytest
 
 
 class TestReferenceField(MongoDBTestCase):

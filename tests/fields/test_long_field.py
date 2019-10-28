@@ -3,11 +3,11 @@ try:
 except ImportError:
     Int64 = int
 
+import pytest
+
 from mongoengine import *
 from mongoengine.connection import get_db
-
 from tests.utils import MongoDBTestCase
-import pytest
 
 
 class TestLongField(MongoDBTestCase):

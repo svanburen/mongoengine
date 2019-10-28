@@ -1,10 +1,10 @@
 import unittest
 
+import pytest
 from bson.son import SON
 
 from mongoengine import *
 from mongoengine.queryset import Q, transform
-import pytest
 
 
 class TestTransform(unittest.TestCase):

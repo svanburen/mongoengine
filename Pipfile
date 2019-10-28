@@ -8,6 +8,8 @@ bson = "*"
 pytest = "*"
 mongomock = "*"
 mock = "*"
+flake8 = "*"
+isort = "*"
 
 [packages]
 pymongo = "*"

@@ -14,5 +14,3 @@ if not six.PY3:
         pass
     else:
         StringIO = cStringIO.StringIO
-
-

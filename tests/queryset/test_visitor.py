@@ -2,13 +2,13 @@ import datetime
 import re
 import unittest
 
+import pytest
 from bson import ObjectId
+from six.moves import range
 
 from mongoengine import *
 from mongoengine.errors import InvalidQueryError
 from mongoengine.queryset import Q
-import pytest
-from six.moves import range
 
 
 class TestQ(unittest.TestCase):

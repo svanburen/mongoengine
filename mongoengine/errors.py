@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-
 __all__ = (
     "NotRegistered",
     "InvalidDocumentError",
@@ -158,4 +157,3 @@ class ValidationError(AssertionError):
 
 class DeprecatedError(Exception):
     """Raise when a user uses a feature that has been Deprecated"""
-

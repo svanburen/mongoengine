@@ -1,5 +1,6 @@
 import os
 import sys
+
 from setuptools import find_packages, setup
 
 # Hack to silence atexit traceback in newer python versions

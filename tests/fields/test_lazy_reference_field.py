@@ -1,10 +1,9 @@
+import pytest
 from bson import DBRef, ObjectId
 
 from mongoengine import *
 from mongoengine.base import LazyReference
-
 from tests.utils import MongoDBTestCase
-import pytest
 
 
 class TestLazyReferenceField(MongoDBTestCase):

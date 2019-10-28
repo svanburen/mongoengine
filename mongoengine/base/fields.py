@@ -1,5 +1,4 @@
 import operator
-import warnings
 import weakref
 
 import pymongo

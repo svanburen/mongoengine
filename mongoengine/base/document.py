@@ -2,10 +2,8 @@ import copy
 import numbers
 from functools import partial
 
-from bson import DBRef, ObjectId, SON, json_util
 import pymongo
-import six
-from six import iteritems
+from bson import SON, DBRef, ObjectId, json_util
 
 from mongoengine import signals
 from mongoengine.base.common import get_document
@@ -25,14 +23,13 @@ from mongoengine.errors import (
     OperationError,
     ValidationError,
 )
-from mongoengine.python_support import Hashable
 
 __all__ = ("BaseDocument", "NON_FIELD_ERRORS")
 
 NON_FIELD_ERRORS = "__all__"
 
 
-class BaseDocument(object):
+class BaseDocument:
     # TODO simplify how `_changed_fields` is used.
     # Currently, handling of `_changed_fields` seems unnecessarily convoluted:
     # 1. `BaseDocument` defines `_changed_fields` in its `__slots__`, yet it's
@@ -92,10 +89,10 @@ class BaseDocument(object):
         # if so raise an Exception.
         if not self._dynamic and (self._meta.get("strict", True) or _created):
             _undefined_fields = set(values.keys()) - set(
-                self._fields.keys() + ["id", "pk", "_cls", "_text_score"]
+                list(self._fields.keys()) + ["id", "pk", "_cls", "_text_score"]
             )
             if _undefined_fields:
-                msg = ('The fields "{0}" do not exist on the document "{1}"').format(
+                msg = ('The fields "{}" do not exist on the document "{}"').format(
                     _undefined_fields, self._class_name
                 )
                 raise FieldDoesNotExist(msg)
@@ -110,7 +107,7 @@ class BaseDocument(object):
         # Assign default values to the instance.
         # We set default values only for fields loaded from DB. See
         # https://github.com/mongoengine/mongoengine/issues/399 for more info.
-        for key, field in iteritems(self._fields):
+        for key, field in self._fields.items():
             if self._db_field_map.get(key, key) in __only_fields:
                 continue
             value = getattr(self, key, None)
@@ -122,14 +119,14 @@ class BaseDocument(object):
         # Set passed values after initialisation
         if self._dynamic:
             dynamic_data = {}
-            for key, value in iteritems(values):
+            for key, value in values.items():
                 if key in self._fields or key == "_id":
                     setattr(self, key, value)
                 else:
                     dynamic_data[key] = value
         else:
             FileField = _import_class("FileField")
-            for key, value in iteritems(values):
+            for key, value in values.items():
                 key = self._reverse_db_field_map.get(key, key)
                 if key in self._fields or key in ("id", "pk", "_cls"):
                     if __auto_convert and value is not None:
@@ -145,7 +142,7 @@ class BaseDocument(object):
 
         if self._dynamic:
             self._dynamic_lock = False
-            for key, value in iteritems(dynamic_data):
+            for key, value in dynamic_data.items():
                 setattr(self, key, value)
 
         # Flag initialised
@@ -163,7 +160,7 @@ class BaseDocument(object):
                 default = default()
             setattr(self, field_name, default)
         else:
-            super(BaseDocument, self).__delattr__(*args, **kwargs)
+            super().__delattr__(*args, **kwargs)
 
     def __setattr__(self, name, value):
         # Handle dynamic data only if an initialised dynamic document
@@ -210,9 +207,9 @@ class BaseDocument(object):
             and self__created
             and name == self._meta.get("id_field")
         ):
-            super(BaseDocument, self).__setattr__("_created", False)
+            super().__setattr__("_created", False)
 
-        super(BaseDocument, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __getstate__(self):
         data = {}
@@ -288,16 +285,13 @@ class BaseDocument(object):
         except (UnicodeEncodeError, UnicodeDecodeError):
             u = "[Bad Unicode data]"
         repr_type = str if u is None else type(u)
-        return repr_type("<%s: %s>" % (self.__class__.__name__, u))
+        return repr_type(f"<{self.__class__.__name__}: {u}>")
 
     def __str__(self):
         # TODO this could be simpler?
         if hasattr(self, "__unicode__"):
-            if six.PY3:
-                return self.__unicode__()
-            else:
-                return six.text_type(self).encode("utf-8")
-        return six.text_type("%s object" % self.__class__.__name__)
+            return self.__unicode__()
+        return str("%s object" % self.__class__.__name__)
 
     def __eq__(self, other):
         if (
@@ -325,7 +319,6 @@ class BaseDocument(object):
         a particular field; it will have a special-case association with the
         field defined by NON_FIELD_ERRORS.
         """
-        pass
 
     def get_text_score(self):
         """
@@ -446,7 +439,7 @@ class BaseDocument(object):
                 pk = self.pk
             elif self._instance and hasattr(self._instance, "pk"):
                 pk = self._instance.pk
-            message = "ValidationError (%s:%s) " % (self._class_name, pk)
+            message = f"ValidationError ({self._class_name}:{pk}) "
             raise ValidationError(message, errors=errors)
 
     def to_json(self, *args, **kwargs):
@@ -519,7 +512,7 @@ class BaseDocument(object):
         if "." in key:
             key, rest = key.split(".", 1)
             key = self._db_field_map.get(key, key)
-            key = "%s.%s" % (key, rest)
+            key = f"{key}.{rest}"
         else:
             key = self._db_field_map.get(key, key)
 
@@ -578,10 +571,10 @@ class BaseDocument(object):
         if not hasattr(data, "items"):
             iterator = enumerate(data)
         else:
-            iterator = iteritems(data)
+            iterator = list(data.items())
 
         for index_or_key, value in iterator:
-            item_key = "%s%s." % (base_key, index_or_key)
+            item_key = f"{base_key}{index_or_key}."
             # don't check anything lower if this key is already marked
             # as changed.
             if item_key[:-1] in changed_fields:
@@ -589,7 +582,7 @@ class BaseDocument(object):
 
             if hasattr(value, "_get_changed_fields"):
                 changed = value._get_changed_fields()
-                changed_fields += ["%s%s" % (item_key, k) for k in changed if k]
+                changed_fields += [f"{item_key}{k}" for k in changed if k]
             elif isinstance(value, (list, tuple, dict)):
                 self._nestable_types_changed_fields(changed_fields, item_key, value)
 
@@ -620,7 +613,7 @@ class BaseDocument(object):
             if isinstance(data, EmbeddedDocument):
                 # Find all embedded fields that have been changed
                 changed = data._get_changed_fields()
-                changed_fields += ["%s%s" % (key, k) for k in changed if k]
+                changed_fields += [f"{key}{k}" for k in changed if k]
             elif isinstance(data, (list, tuple, dict)):
                 if hasattr(field, "field") and isinstance(
                     field.field, (ReferenceField, GenericReferenceField)
@@ -670,6 +663,9 @@ class BaseDocument(object):
                 del set_data["_id"]
 
         # Determine if any changed items were actually unset.
+        # first, create a copy of the data
+        set_data_copy = {k: v for k, v in set_data.items()}
+
         for path, value in set_data.items():
             if value or isinstance(
                 value, (numbers.Number, bool)
@@ -679,7 +675,7 @@ class BaseDocument(object):
             parts = path.split(".")
 
             if self._dynamic and len(parts) and parts[0] in self._dynamic_fields:
-                del set_data[path]
+                del set_data_copy[path]
                 unset_data[path] = 1
                 continue
 
@@ -714,9 +710,9 @@ class BaseDocument(object):
             if value != default:
                 continue
 
-            del set_data[path]
+            del set_data_copy[path]
             unset_data[path] = 1
-        return set_data, unset_data
+        return set_data_copy, unset_data
 
     @classmethod
     def _get_collection_name(cls):
@@ -741,7 +737,7 @@ class BaseDocument(object):
         # Convert SON to a data dict, making sure each key is a string and
         # corresponds to the right db field.
         data = {}
-        for key, value in iteritems(son):
+        for key, value in son.items():
             key = str(key)
             key = cls._db_field_map.get(key, key)
             data[key] = value
@@ -756,7 +752,7 @@ class BaseDocument(object):
         if not _auto_dereference:
             fields = copy.deepcopy(fields)
 
-        for field_name, field in iteritems(fields):
+        for field_name, field in fields.items():
             field._auto_dereference = _auto_dereference
             if field.db_field in data:
                 value = data[field.db_field]
@@ -770,16 +766,15 @@ class BaseDocument(object):
                     errors_dict[field_name] = e
 
         if errors_dict:
-            errors = "\n".join(["%s - %s" % (k, v) for k, v in errors_dict.items()])
-            msg = "Invalid data to create a `%s` instance.\n%s" % (
-                cls._class_name,
-                errors,
+            errors = "\n".join([f"{k} - {v}" for k, v in errors_dict.items()])
+            msg = "Invalid data to create a `{}` instance.\n{}".format(
+                cls._class_name, errors
             )
             raise InvalidDocumentError(msg)
 
         # In STRICT documents, remove any keys that aren't in cls._fields
         if cls.STRICT:
-            data = {k: v for k, v in iteritems(data) if k in cls._fields}
+            data = {k: v for k, v in data.items() if k in cls._fields}
 
         obj = cls(
             __auto_convert=False, _created=created, __only_fields=only_fields, **data
@@ -826,7 +821,7 @@ class BaseDocument(object):
     @classmethod
     def _build_index_spec(cls, spec):
         """Build a PyMongo index spec from a MongoEngine index spec."""
-        if isinstance(spec, six.string_types):
+        if isinstance(spec, str):
             spec = {"fields": [spec]}
         elif isinstance(spec, (list, tuple)):
             spec = {"fields": list(spec)}
@@ -923,7 +918,7 @@ class BaseDocument(object):
 
                 # Add any unique_with fields to the back of the index spec
                 if field.unique_with:
-                    if isinstance(field.unique_with, six.string_types):
+                    if isinstance(field.unique_with, str):
                         field.unique_with = [field.unique_with]
 
                     # Convert unique_with field names to real field names
@@ -943,9 +938,7 @@ class BaseDocument(object):
                     unique_fields += unique_with
 
                 # Add the new index to the list
-                fields = [
-                    ("%s%s" % (namespace, f), pymongo.ASCENDING) for f in unique_fields
-                ]
+                fields = [(f"{namespace}{f}", pymongo.ASCENDING) for f in unique_fields]
                 index = {"fields": fields, "unique": True, "sparse": sparse}
                 unique_indexes.append(index)
 
@@ -1001,7 +994,7 @@ class BaseDocument(object):
             elif field._geo_index:
                 field_name = field.db_field
                 if parent_field:
-                    field_name = "%s.%s" % (parent_field, field_name)
+                    field_name = f"{parent_field}.{field_name}"
                 geo_indices.append({"fields": [(field_name, field._geo_index)]})
 
         return geo_indices
@@ -1170,9 +1163,6 @@ class BaseDocument(object):
                 else [value]
             )
             return sep.join(
-                [
-                    six.text_type(dict(field.choices).get(val, val))
-                    for val in values or []
-                ]
+                [str(dict(field.choices).get(val, val)) for val in values or []]
             )
         return value

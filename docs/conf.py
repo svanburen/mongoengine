@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # MongoEngine documentation build configuration file, created by
 # sphinx-quickstart on Sun Nov 22 18:14:13 2009.
@@ -11,6 +10,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from __future__ import absolute_import
 import sys, os
 
 import sphinx_rtd_theme
@@ -41,8 +41,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"MongoEngine"
-copyright = u"2009, MongoEngine Authors"
+project = "MongoEngine"
+copyright = "2009, MongoEngine Authors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

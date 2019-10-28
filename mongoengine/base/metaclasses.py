@@ -1,9 +1,6 @@
 import itertools
 import warnings
 
-import six
-from six import iteritems, itervalues
-
 from mongoengine.base.common import _document_registry
 from mongoengine.base.fields import BaseField, ComplexBaseField, ObjectIdField
 from mongoengine.common import _import_class
@@ -15,7 +12,6 @@ from mongoengine.queryset import (
     QuerySetManager,
 )
 
-
 __all__ = ("DocumentMetaclass", "TopLevelDocumentMetaclass")
 
 
@@ -25,7 +21,7 @@ class DocumentMetaclass(type):
     # TODO lower complexity of this method
     def __new__(mcs, name, bases, attrs):
         flattened_bases = mcs._get_bases(bases)
-        super_new = super(DocumentMetaclass, mcs).__new__
+        super_new = super().__new__
 
         # If a base class just call super
         metaclass = attrs.get("my_metaclass")
@@ -69,7 +65,7 @@ class DocumentMetaclass(type):
             # Standard object mixin - merge in any Fields
             if not hasattr(base, "_meta"):
                 base_fields = {}
-                for attr_name, attr_value in iteritems(base.__dict__):
+                for attr_name, attr_value in base.__dict__.items():
                     if not isinstance(attr_value, BaseField):
                         continue
                     attr_value.name = attr_name
@@ -81,7 +77,7 @@ class DocumentMetaclass(type):
 
         # Discover any document fields
         field_names = {}
-        for attr_name, attr_value in iteritems(attrs):
+        for attr_name, attr_value in attrs.items():
             if not isinstance(attr_value, BaseField):
                 continue
             attr_value.name = attr_name
@@ -111,9 +107,7 @@ class DocumentMetaclass(type):
 
         attrs["_fields_ordered"] = tuple(
             i[1]
-            for i in sorted(
-                (v.creation_counter, v.name) for v in itervalues(doc_fields)
-            )
+            for i in sorted((v.creation_counter, v.name) for v in doc_fields.values())
         )
 
         #
@@ -180,17 +174,16 @@ class DocumentMetaclass(type):
         # module continues to use im_func and im_self, so the code below
         # copies __func__ into im_func and __self__ into im_self for
         # classmethod objects in Document derived classes.
-        if six.PY3:
-            for val in new_class.__dict__.values():
-                if isinstance(val, classmethod):
-                    f = val.__get__(new_class)
-                    if hasattr(f, "__func__") and not hasattr(f, "im_func"):
-                        f.__dict__.update({"im_func": getattr(f, "__func__")})
-                    if hasattr(f, "__self__") and not hasattr(f, "im_self"):
-                        f.__dict__.update({"im_self": getattr(f, "__self__")})
+        for val in new_class.__dict__.values():
+            if isinstance(val, classmethod):
+                f = val.__get__(new_class)
+                if hasattr(f, "__func__") and not hasattr(f, "im_func"):
+                    f.__dict__.update({"im_func": getattr(f, "__func__")})
+                if hasattr(f, "__self__") and not hasattr(f, "im_self"):
+                    f.__dict__.update({"im_self": getattr(f, "__self__")})
 
         # Handle delete rules
-        for field in itervalues(new_class._fields):
+        for field in new_class._fields.values():
             f = field
             if f.owner_document is None:
                 f.owner_document = new_class
@@ -252,8 +245,7 @@ class DocumentMetaclass(type):
             if base is object:
                 continue
             yield base
-            for child_base in mcs.__get_bases(base.__bases__):
-                yield child_base
+            yield from mcs.__get_bases(base.__bases__)
 
     @classmethod
     def _import_classes(mcs):
@@ -271,7 +263,7 @@ class TopLevelDocumentMetaclass(DocumentMetaclass):
 
     def __new__(mcs, name, bases, attrs):
         flattened_bases = mcs._get_bases(bases)
-        super_new = super(TopLevelDocumentMetaclass, mcs).__new__
+        super_new = super().__new__
 
         # Set default _meta data if base class, otherwise get user defined meta
         if attrs.get("my_metaclass") == TopLevelDocumentMetaclass:
@@ -399,7 +391,7 @@ class TopLevelDocumentMetaclass(DocumentMetaclass):
             new_class.objects = QuerySetManager()
 
         # Validate the fields and set primary key if needed
-        for field_name, field in iteritems(new_class._fields):
+        for field_name, field in new_class._fields.items():
             if field.primary_key:
                 # Ensure only one primary key is set
                 current_pk = new_class._meta.get("id_field")
@@ -462,8 +454,8 @@ class TopLevelDocumentMetaclass(DocumentMetaclass):
 
         id_basename, id_db_basename, i = ("auto_id", "_auto_id", 0)
         for i in itertools.count():
-            id_name = "{0}_{1}".format(id_basename, i)
-            id_db_name = "{0}_{1}".format(id_db_basename, i)
+            id_name = f"{id_basename}_{i}"
+            id_db_name = f"{id_db_basename}_{i}"
             if id_name not in existing_fields and id_db_name not in existing_db_fields:
                 return id_name, id_db_name
 
@@ -476,7 +468,7 @@ class MetaDict(dict):
     _merge_options = ("indexes",)
 
     def merge(self, new_options):
-        for k, v in iteritems(new_options):
+        for k, v in new_options.items():
             if k in self._merge_options:
                 self[k] = self.get(k, []) + v
             else:
@@ -485,5 +477,3 @@ class MetaDict(dict):
 
 class BasesTuple(tuple):
     """Special class to handle introspection of bases tuple in __new__"""
-
-    pass

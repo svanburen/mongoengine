@@ -1,11 +1,11 @@
+from __future__ import absolute_import
+
 import re
 import warnings
 
-from bson.dbref import DBRef
 import pymongo
+from bson.dbref import DBRef
 from pymongo.read_preferences import ReadPreference
-import six
-from six import iteritems
 
 from mongoengine import signals
 from mongoengine.base import (
@@ -44,7 +44,7 @@ def includes_cls(fields):
     """Helper function used for ensuring and comparing indexes."""
     first_field = None
     if len(fields):
-        if isinstance(fields[0], six.string_types):
+        if isinstance(fields[0], str):
             first_field = fields[0]
         elif isinstance(fields[0], (list, tuple)) and len(fields[0]):
             first_field = fields[0][0]
@@ -55,8 +55,8 @@ class InvalidCollectionError(Exception):
     pass
 
 
-class EmbeddedDocument(six.with_metaclass(DocumentMetaclass, BaseDocument)):
-    """A :class:`~mongoengine.Document` that isn't stored in its own
+class EmbeddedDocument(BaseDocument, metaclass=DocumentMetaclass):
+    r"""A :class:`~mongoengine.Document` that isn't stored in its own
     collection.  :class:`~mongoengine.EmbeddedDocument`\ s should be used as
     fields on :class:`~mongoengine.Document`\ s through the
     :class:`~mongoengine.EmbeddedDocumentField` field type.
@@ -82,7 +82,7 @@ class EmbeddedDocument(six.with_metaclass(DocumentMetaclass, BaseDocument)):
     __hash__ = None
 
     def __init__(self, *args, **kwargs):
-        super(EmbeddedDocument, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._instance = None
         self._changed_fields = []
 
@@ -95,7 +95,7 @@ class EmbeddedDocument(six.with_metaclass(DocumentMetaclass, BaseDocument)):
         return not self.__eq__(other)
 
     def to_mongo(self, *args, **kwargs):
-        data = super(EmbeddedDocument, self).to_mongo(*args, **kwargs)
+        data = super().to_mongo(*args, **kwargs)
 
         # remove _id from the SON if it's in it and it's None
         if "_id" in data and data["_id"] is None:
@@ -104,7 +104,7 @@ class EmbeddedDocument(six.with_metaclass(DocumentMetaclass, BaseDocument)):
         return data
 
 
-class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
+class Document(BaseDocument, metaclass=TopLevelDocumentMetaclass):
     """The base class used for defining the structure and properties of
     collections of documents stored in MongoDB. Inherit from this class, and
     add fields as class attributes to define a document's structure.
@@ -260,7 +260,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
         return db.create_collection(collection_name, **opts)
 
     def to_mongo(self, *args, **kwargs):
-        data = super(Document, self).to_mongo(*args, **kwargs)
+        data = super().to_mongo(*args, **kwargs)
 
         # If '_id' is None, try and set it from self._data. If that
         # doesn't exist either, remove '_id' from the SON completely.
@@ -328,7 +328,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
         _refs=None,
         save_condition=None,
         signal_kwargs=None,
-        **kwargs
+        **kwargs,
     ):
         """Save the :class:`~mongoengine.Document` to the database. If the
         document already exists, it will be updated, otherwise it will be
@@ -431,16 +431,16 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
                 self.cascade_save(**kwargs)
 
         except pymongo.errors.DuplicateKeyError as err:
-            message = u"Tried to save duplicate unique keys (%s)"
-            raise NotUniqueError(message % six.text_type(err))
+            message = "Tried to save duplicate unique keys (%s)"
+            raise NotUniqueError(message % str(err))
         except pymongo.errors.OperationFailure as err:
             message = "Could not save document (%s)"
-            if re.match("^E1100[01] duplicate key", six.text_type(err)):
+            if re.match("^E1100[01] duplicate key", str(err)):
                 # E11000 - duplicate key error index
                 # E11001 - duplicate key on update
-                message = u"Tried to save duplicate unique keys (%s)"
-                raise NotUniqueError(message % six.text_type(err))
-            raise OperationError(message % six.text_type(err))
+                message = "Tried to save duplicate unique keys (%s)"
+                raise NotUniqueError(message % str(err))
+            raise OperationError(message % str(err))
 
         # Make sure we store the PK on this document now that it's saved
         id_field = self._meta["id_field"]
@@ -559,7 +559,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
             if not getattr(ref, "_changed_fields", True):
                 continue
 
-            ref_id = "%s,%s" % (ref.__class__.__name__, str(ref._data))
+            ref_id = "{},{}".format(ref.__class__.__name__, str(ref._data))
             if ref and ref_id not in _refs:
                 _refs.append(ref_id)
                 kwargs["_refs"] = _refs
@@ -634,7 +634,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
 
         # Delete FileFields separately
         FileField = _import_class("FileField")
-        for name, field in iteritems(self._fields):
+        for name, field in self._fields.items():
             if isinstance(field, FileField):
                 getattr(self, name).delete()
 
@@ -643,7 +643,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
                 write_concern=write_concern, _from_doc_delete=True
             )
         except pymongo.errors.OperationFailure as err:
-            message = u"Could not delete document (%s)" % err.message
+            message = f"Could not delete document ({str(err)})"
             raise OperationError(message)
         signals.post_delete.send(self.__class__, document=self, **signal_kwargs)
 
@@ -992,10 +992,10 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
                     indexes.append(index)
 
         # finish up by appending { '_id': 1 } and { '_cls': 1 }, if needed
-        if [(u"_id", 1)] not in indexes:
-            indexes.append([(u"_id", 1)])
+        if [("_id", 1)] not in indexes:
+            indexes.append([("_id", 1)])
         if cls._meta.get("index_cls", True) and cls._meta.get("allow_inheritance"):
-            indexes.append([(u"_cls", 1)])
+            indexes.append([("_cls", 1)])
 
         return indexes
 
@@ -1011,7 +1011,7 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
         for info in cls._get_collection().index_information().values():
             if "_fts" in info["key"][0]:
                 index_type = info["key"][0][1]
-                text_index_fields = info.get("weights").keys()
+                text_index_fields = list(info.get("weights").keys())
                 existing.append([(key, index_type) for key in text_index_fields])
             else:
                 existing.append(info["key"])
@@ -1019,19 +1019,19 @@ class Document(six.with_metaclass(TopLevelDocumentMetaclass, BaseDocument)):
         extra = [index for index in existing if index not in required]
 
         # if { _cls: 1 } is missing, make sure it's *really* necessary
-        if [(u"_cls", 1)] in missing:
+        if [("_cls", 1)] in missing:
             cls_obsolete = False
             for index in existing:
                 if includes_cls(index) and index not in extra:
                     cls_obsolete = True
                     break
             if cls_obsolete:
-                missing.remove([(u"_cls", 1)])
+                missing.remove([("_cls", 1)])
 
         return {"missing": missing, "extra": extra}
 
 
-class DynamicDocument(six.with_metaclass(TopLevelDocumentMetaclass, Document)):
+class DynamicDocument(Document, metaclass=TopLevelDocumentMetaclass):
     """A Dynamic Document class allowing flexible, expandable and uncontrolled
     schemas.  As a :class:`~mongoengine.Document` subclass, acts in the same
     way as an ordinary document but has expanded style properties.  Any data
@@ -1060,10 +1060,10 @@ class DynamicDocument(six.with_metaclass(TopLevelDocumentMetaclass, Document)):
             setattr(self, field_name, None)
             self._dynamic_fields[field_name].null = False
         else:
-            super(DynamicDocument, self).__delattr__(*args, **kwargs)
+            super().__delattr__(*args, **kwargs)
 
 
-class DynamicEmbeddedDocument(six.with_metaclass(DocumentMetaclass, EmbeddedDocument)):
+class DynamicEmbeddedDocument(EmbeddedDocument, metaclass=DocumentMetaclass):
     """A Dynamic Embedded Document class allowing flexible, expandable and
     uncontrolled schemas. See :class:`~mongoengine.DynamicDocument` for more
     information about dynamic documents.
@@ -1089,7 +1089,7 @@ class DynamicEmbeddedDocument(six.with_metaclass(DocumentMetaclass, EmbeddedDocu
             setattr(self, field_name, None)
 
 
-class MapReduceDocument(object):
+class MapReduceDocument:
     """A document returned from a map/reduce query.
 
     :param collection: An instance of :class:`~pymongo.Collection`

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from mongoengine.errors import *
 from mongoengine.queryset.field_list import *
 from mongoengine.queryset.manager import *

@@ -1,18 +1,14 @@
-from __future__ import absolute_import
-
 import copy
 import itertools
 import re
 import warnings
 
-from bson import SON, json_util
-from bson.code import Code
 import pymongo
 import pymongo.errors
+from bson import SON, json_util
+from bson.code import Code
 from pymongo.collection import ReturnDocument
 from pymongo.common import validate_read_preference
-import six
-from six import iteritems
 
 from mongoengine import signals
 from mongoengine.base import get_document
@@ -30,7 +26,6 @@ from mongoengine.queryset import transform
 from mongoengine.queryset.field_list import QueryFieldList
 from mongoengine.queryset.visitor import Q, QNode
 
-
 __all__ = ("BaseQuerySet", "DO_NOTHING", "NULLIFY", "CASCADE", "DENY", "PULL")
 
 # Delete rules
@@ -41,7 +36,7 @@ DENY = 3
 PULL = 4
 
 
-class BaseQuerySet(object):
+class BaseQuerySet:
     """A set of results returned from a query. Wraps a MongoDB cursor,
     providing :class:`~mongoengine.Document` objects as the results.
     """
@@ -58,7 +53,6 @@ class BaseQuerySet(object):
         self._where_clause = None
         self._loaded_fields = QueryFieldList()
         self._ordering = None
-        self._snapshot = False
         self._timeout = True
         self._slave_okay = False
         self._read_preference = None
@@ -256,19 +250,19 @@ class BaseQuerySet(object):
         queryset = queryset.filter(*q_objs, **query)
 
         try:
-            result = six.next(queryset)
+            result = next(queryset)
         except StopIteration:
             msg = "%s matching query does not exist." % queryset._document._class_name
             raise queryset._document.DoesNotExist(msg)
         try:
-            six.next(queryset)
+            next(queryset)
         except StopIteration:
             return result
 
         # If we were able to retrieve the 2nd doc, rewind the cursor and
         # raise the MultipleObjectsReturned exception.
         queryset.rewind()
-        message = u"%d items returned, instead of 1" % queryset.count()
+        message = "%d items returned, instead of 1" % queryset.count()
         raise queryset._document.MultipleObjectsReturned(message)
 
     def create(self, **kwargs):
@@ -353,20 +347,20 @@ class BaseQuerySet(object):
             )
         except pymongo.errors.DuplicateKeyError as err:
             message = "Could not save document (%s)"
-            raise NotUniqueError(message % six.text_type(err))
+            raise NotUniqueError(message % str(err))
         except pymongo.errors.BulkWriteError as err:
             # inserting documents that already have an _id field will
             # give huge performance debt or raise
-            message = u"Bulk write error: (%s)"
-            raise BulkWriteError(message % six.text_type(err.details))
+            message = "Bulk write error: (%s)"
+            raise BulkWriteError(message % str(err.details))
         except pymongo.errors.OperationFailure as err:
             message = "Could not save document (%s)"
-            if re.match("^E1100[01] duplicate key", six.text_type(err)):
+            if re.match("^E1100[01] duplicate key", str(err)):
                 # E11000 - duplicate key error index
                 # E11001 - duplicate key on update
-                message = u"Tried to save duplicate unique keys (%s)"
-                raise NotUniqueError(message % six.text_type(err))
-            raise OperationError(message % six.text_type(err))
+                message = "Tried to save duplicate unique keys (%s)"
+                raise NotUniqueError(message % str(err))
+            raise OperationError(message % str(err))
 
         # Apply inserted_ids to documents
         for doc, doc_id in zip(docs, ids):
@@ -538,12 +532,12 @@ class BaseQuerySet(object):
             elif result.raw_result:
                 return result.raw_result["n"]
         except pymongo.errors.DuplicateKeyError as err:
-            raise NotUniqueError(u"Update failed (%s)" % six.text_type(err))
+            raise NotUniqueError("Update failed (%s)" % str(err))
         except pymongo.errors.OperationFailure as err:
-            if six.text_type(err) == u"multi not coded yet":
-                message = u"update() method requires MongoDB 1.1.3+"
+            if str(err) == "multi not coded yet":
+                message = "update() method requires MongoDB 1.1.3+"
                 raise OperationError(message)
-            raise OperationError(u"Update failed (%s)" % six.text_type(err))
+            raise OperationError("Update failed (%s)" % str(err))
 
     def upsert_one(self, write_concern=None, **update):
         """Overwrite or add the first document matched by the query.
@@ -601,24 +595,14 @@ class BaseQuerySet(object):
             **update
         )
 
-    def modify(
-        self, upsert=False, full_response=False, remove=False, new=False, **update
-    ):
+    def modify(self, upsert=False, remove=False, new=False, **update):
         """Update and return the updated document.
 
         Returns either the document before or after modification based on `new`
         parameter. If no documents match the query and `upsert` is false,
         returns ``None``. If upserting and `new` is false, returns ``None``.
 
-        If the full_response parameter is ``True``, the return value will be
-        the entire response object from the server, including the 'ok' and
-        'lastErrorObject' fields, rather than just the modified document.
-        This is useful mainly because the 'lastErrorObject' document holds
-        information about the command's execution.
-
         :param upsert: insert if document doesn't exist (default ``False``)
-        :param full_response: return the entire response object from the
-            server (default ``False``, not available for PyMongo 3+)
         :param remove: remove rather than updating (default ``False``)
         :param new: return updated rather than original document
             (default ``False``)
@@ -640,9 +624,6 @@ class BaseQuerySet(object):
         sort = queryset._ordering
 
         try:
-            if full_response:
-                msg = "With PyMongo 3+, it is not possible anymore to get the full response."
-                warnings.warn(msg, DeprecationWarning)
             if remove:
                 result = queryset._collection.find_one_and_delete(
                     query, sort=sort, **self._cursor_args
@@ -661,15 +642,9 @@ class BaseQuerySet(object):
                     **self._cursor_args
                 )
         except pymongo.errors.DuplicateKeyError as err:
-            raise NotUniqueError(u"Update failed (%s)" % err)
+            raise NotUniqueError("Update failed (%s)" % err)
         except pymongo.errors.OperationFailure as err:
-            raise OperationError(u"Update failed (%s)" % err)
-
-        if full_response:
-            if result["value"] is not None:
-                result["value"] = self._document._from_son(
-                    result["value"], only_fields=self.only_fields
-                )
+            raise OperationError("Update failed (%s)" % err)
         else:
             if result is not None:
                 result = self._document._from_son(result, only_fields=self.only_fields)
@@ -692,7 +667,7 @@ class BaseQuerySet(object):
         return queryset.filter(pk=object_id).first()
 
     def in_bulk(self, object_ids):
-        """Retrieve a set of documents by their ids.
+        r"""Retrieve a set of documents by their ids.
 
         :param object_ids: a list or tuple of ``ObjectId``\ s
         :rtype: dict of ObjectIds as keys and collection-specific
@@ -773,7 +748,6 @@ class BaseQuerySet(object):
             "_where_clause",
             "_loaded_fields",
             "_ordering",
-            "_snapshot",
             "_timeout",
             "_slave_okay",
             "_read_preference",
@@ -989,7 +963,7 @@ class BaseQuerySet(object):
         .. versionchanged:: 0.5 - Added subfield support
         """
         fields = {f: QueryFieldList.ONLY for f in fields}
-        self.only_fields = fields.keys()
+        self.only_fields = list(fields.keys())
         return self.fields(True, **fields)
 
     def exclude(self, *fields):
@@ -1139,25 +1113,10 @@ class BaseQuerySet(object):
         return self._chainable_method("comment", text)
 
     def explain(self):
-        """Return an explain plan record for the
+        r"""Return an explain plan record for the
         :class:`~mongoengine.queryset.QuerySet`\ 's cursor.
         """
         return self._cursor.explain()
-
-    # DEPRECATED. Has no more impact on PyMongo 3+
-    def snapshot(self, enabled):
-        """Enable or disable snapshot mode when querying.
-
-        :param enabled: whether or not snapshot mode is enabled
-
-        ..versionchanged:: 0.5 - made chainable
-        .. deprecated:: Ignored with PyMongo 3+
-        """
-        msg = "snapshot is deprecated as it has no impact when using PyMongo 3+."
-        warnings.warn(msg, DeprecationWarning)
-        queryset = self.clone()
-        queryset._snapshot = enabled
-        return queryset
 
     def timeout(self, enabled):
         """Enable or disable the default mongod timeout when querying. (no_cursor_timeout option)
@@ -1168,20 +1127,6 @@ class BaseQuerySet(object):
         """
         queryset = self.clone()
         queryset._timeout = enabled
-        return queryset
-
-    # DEPRECATED. Has no more impact on PyMongo 3+
-    def slave_okay(self, enabled):
-        """Enable or disable the slave_okay when querying.
-
-        :param enabled: whether or not the slave_okay is enabled
-
-        .. deprecated:: Ignored with PyMongo 3+
-        """
-        msg = "slave_okay is deprecated as it has no impact when using PyMongo 3+."
-        warnings.warn(msg, DeprecationWarning)
-        queryset = self.clone()
-        queryset._slave_okay = enabled
         return queryset
 
     def read_preference(self, read_preference):
@@ -1343,13 +1288,13 @@ class BaseQuerySet(object):
         map_f_scope = {}
         if isinstance(map_f, Code):
             map_f_scope = map_f.scope
-            map_f = six.text_type(map_f)
+            map_f = str(map_f)
         map_f = Code(queryset._sub_js_fields(map_f), map_f_scope)
 
         reduce_f_scope = {}
         if isinstance(reduce_f, Code):
             reduce_f_scope = reduce_f.scope
-            reduce_f = six.text_type(reduce_f)
+            reduce_f = str(reduce_f)
         reduce_f_code = queryset._sub_js_fields(reduce_f)
         reduce_f = Code(reduce_f_code, reduce_f_scope)
 
@@ -1359,7 +1304,7 @@ class BaseQuerySet(object):
             finalize_f_scope = {}
             if isinstance(finalize_f, Code):
                 finalize_f_scope = finalize_f.scope
-                finalize_f = six.text_type(finalize_f)
+                finalize_f = str(finalize_f)
             finalize_f_code = queryset._sub_js_fields(finalize_f)
             finalize_f = Code(finalize_f_code, finalize_f_scope)
             mr_args["finalize"] = finalize_f
@@ -1375,7 +1320,7 @@ class BaseQuerySet(object):
         else:
             map_reduce_function = "map_reduce"
 
-            if isinstance(output, six.string_types):
+            if isinstance(output, str):
                 mr_args["out"] = output
 
             elif isinstance(output, dict):
@@ -1418,47 +1363,6 @@ class BaseQuerySet(object):
             yield MapReduceDocument(
                 queryset._document, queryset._collection, doc["_id"], doc["value"]
             )
-
-    def exec_js(self, code, *fields, **options):
-        """Execute a Javascript function on the server. A list of fields may be
-        provided, which will be translated to their correct names and supplied
-        as the arguments to the function. A few extra variables are added to
-        the function's scope: ``collection``, which is the name of the
-        collection in use; ``query``, which is an object representing the
-        current query; and ``options``, which is an object containing any
-        options specified as keyword arguments.
-
-        As fields in MongoEngine may use different names in the database (set
-        using the :attr:`db_field` keyword argument to a :class:`Field`
-        constructor), a mechanism exists for replacing MongoEngine field names
-        with the database field names in Javascript code. When accessing a
-        field, use square-bracket notation, and prefix the MongoEngine field
-        name with a tilde (~).
-
-        :param code: a string of Javascript code to execute
-        :param fields: fields that you will be using in your function, which
-            will be passed in to your function as arguments
-        :param options: options that you want available to the function
-            (accessed in Javascript through the ``options`` object)
-        """
-        queryset = self.clone()
-
-        code = queryset._sub_js_fields(code)
-
-        fields = [queryset._document._translate_field_name(f) for f in fields]
-        collection = queryset._document._get_collection_name()
-
-        scope = {"collection": collection, "options": options or {}}
-
-        query = queryset._query
-        if queryset._where_clause:
-            query["$where"] = queryset._where_clause
-
-        scope["query"] = query
-        code = Code(code, scope=scope)
-
-        db = queryset._document._get_db()
-        return db.eval(code, *fields)
 
     def where(self, where_clause):
         """Filter ``QuerySet`` results with a ``$where`` clause (a Javascript
@@ -1528,32 +1432,6 @@ class BaseQuerySet(object):
             return result[0]["total"]
         return 0
 
-    def item_frequencies(self, field, normalize=False, map_reduce=True):
-        """Returns a dictionary of all items present in a field across
-        the whole queried set of documents, and their corresponding frequency.
-        This is useful for generating tag clouds, or searching documents.
-
-        .. note::
-
-            Can only do direct simple mappings and cannot map across
-            :class:`~mongoengine.fields.ReferenceField` or
-            :class:`~mongoengine.fields.GenericReferenceField` for more complex
-            counting a manual map reduce call is required.
-
-        If the field is a :class:`~mongoengine.fields.ListField`, the items within
-        each list will be counted individually.
-
-        :param field: the field to use
-        :param normalize: normalize the results so they add to 1.0
-        :param map_reduce: Use map_reduce over exec_js
-
-        .. versionchanged:: 0.5 defaults to map_reduce and can handle embedded
-                            document lookups
-        """
-        if map_reduce:
-            return self._item_frequencies_map_reduce(field, normalize=normalize)
-        return self._item_frequencies_exec_js(field, normalize=normalize)
-
     # Iterator helpers
 
     def __next__(self):
@@ -1562,7 +1440,7 @@ class BaseQuerySet(object):
         if self._limit == 0 or self._none:
             raise StopIteration
 
-        raw_doc = six.next(self._cursor)
+        raw_doc = next(self._cursor)
 
         if self._as_pymongo:
             return raw_doc
@@ -1600,12 +1478,6 @@ class BaseQuerySet(object):
     @property
     def _cursor_args(self):
         fields_name = "projection"
-        # snapshot is not handled at all by PyMongo 3+
-        # TODO: evaluate similar possibilities using modifiers
-        if self._snapshot:
-            msg = "The snapshot option is not anymore available with PyMongo 3+"
-            warnings.warn(msg, DeprecationWarning)
-
         cursor_args = {}
         if not self._timeout:
             cursor_args["no_cursor_timeout"] = True
@@ -1708,119 +1580,6 @@ class BaseQuerySet(object):
 
     # Helper Functions
 
-    def _item_frequencies_map_reduce(self, field, normalize=False):
-        map_func = """
-            function() {
-                var path = '{{~%(field)s}}'.split('.');
-                var field = this;
-
-                for (p in path) {
-                    if (typeof field != 'undefined')
-                       field = field[path[p]];
-                    else
-                       break;
-                }
-                if (field && field.constructor == Array) {
-                    field.forEach(function(item) {
-                        emit(item, 1);
-                    });
-                } else if (typeof field != 'undefined') {
-                    emit(field, 1);
-                } else {
-                    emit(null, 1);
-                }
-            }
-        """ % {
-            "field": field
-        }
-        reduce_func = """
-            function(key, values) {
-                var total = 0;
-                var valuesSize = values.length;
-                for (var i=0; i < valuesSize; i++) {
-                    total += parseInt(values[i], 10);
-                }
-                return total;
-            }
-        """
-        values = self.map_reduce(map_func, reduce_func, "inline")
-        frequencies = {}
-        for f in values:
-            key = f.key
-            if isinstance(key, float):
-                if int(key) == key:
-                    key = int(key)
-            frequencies[key] = int(f.value)
-
-        if normalize:
-            count = sum(frequencies.values())
-            frequencies = {k: float(v) / count for k, v in frequencies.items()}
-
-        return frequencies
-
-    def _item_frequencies_exec_js(self, field, normalize=False):
-        """Uses exec_js to execute"""
-        freq_func = """
-            function(path) {
-                var path = path.split('.');
-
-                var total = 0.0;
-                db[collection].find(query).forEach(function(doc) {
-                    var field = doc;
-                    for (p in path) {
-                        if (field)
-                            field = field[path[p]];
-                         else
-                            break;
-                    }
-                    if (field && field.constructor == Array) {
-                       total += field.length;
-                    } else {
-                       total++;
-                    }
-                });
-
-                var frequencies = {};
-                var types = {};
-                var inc = 1.0;
-
-                db[collection].find(query).forEach(function(doc) {
-                    field = doc;
-                    for (p in path) {
-                        if (field)
-                            field = field[path[p]];
-                        else
-                            break;
-                    }
-                    if (field && field.constructor == Array) {
-                        field.forEach(function(item) {
-                            frequencies[item] = inc + (isNaN(frequencies[item]) ? 0: frequencies[item]);
-                        });
-                    } else {
-                        var item = field;
-                        types[item] = item;
-                        frequencies[item] = inc + (isNaN(frequencies[item]) ? 0: frequencies[item]);
-                    }
-                });
-                return [total, frequencies, types];
-            }
-        """
-        total, data, types = self.exec_js(freq_func, field)
-        values = {types.get(k): int(v) for k, v in iteritems(data)}
-
-        if normalize:
-            values = {k: float(v) / total for k, v in values.items()}
-
-        frequencies = {}
-        for k, v in iteritems(values):
-            if isinstance(k, float):
-                if int(k) == k:
-                    k = int(k)
-
-            frequencies[k] = v
-
-        return frequencies
-
     def _fields_to_dbfields(self, fields):
         """Translate fields' paths to their db equivalents."""
         subclasses = []
@@ -1832,7 +1591,7 @@ class BaseQuerySet(object):
             field_parts = field.split(".")
             try:
                 field = ".".join(
-                    f if isinstance(f, six.string_types) else f.db_field
+                    f if isinstance(f, str) else f.db_field
                     for f in self._document._lookup_field(field_parts)
                 )
                 db_field_paths.append(field)
@@ -1844,7 +1603,7 @@ class BaseQuerySet(object):
                 for subdoc in subclasses:
                     try:
                         subfield = ".".join(
-                            f if isinstance(f, six.string_types) else f.db_field
+                            f if isinstance(f, str) else f.db_field
                             for f in subdoc._lookup_field(field_parts)
                         )
                         db_field_paths.append(subfield)
@@ -1918,7 +1677,7 @@ class BaseQuerySet(object):
             field_name = match.group(1).split(".")
             fields = self._document._lookup_field(field_name)
             # Substitute the correct name for the field into the javascript
-            return u'["%s"]' % fields[-1].db_field
+            return '["%s"]' % fields[-1].db_field
 
         def field_path_sub(match):
             # Extract just the field name, and look up the field objects
@@ -1948,23 +1707,3 @@ class BaseQuerySet(object):
         setattr(queryset, "_" + method_name, val)
 
         return queryset
-
-    # Deprecated
-    def ensure_index(self, **kwargs):
-        """Deprecated use :func:`Document.ensure_index`"""
-        msg = (
-            "Doc.objects()._ensure_index() is deprecated. "
-            "Use Doc.ensure_index() instead."
-        )
-        warnings.warn(msg, DeprecationWarning)
-        self._document.__class__.ensure_index(**kwargs)
-        return self
-
-    def _ensure_indexes(self):
-        """Deprecated use :func:`~Document.ensure_indexes`"""
-        msg = (
-            "Doc.objects()._ensure_indexes() is deprecated. "
-            "Use Doc.ensure_indexes() instead."
-        )
-        warnings.warn(msg, DeprecationWarning)
-        self._document.__class__.ensure_indexes()

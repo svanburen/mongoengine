@@ -494,11 +494,10 @@ class TestGeoQueries(MongoDBTestCase):
         p = Place(location=[24.946861267089844, 60.16311983618494])
         p.save()
         qs = Place.objects().only("location")
-        assert qs.as_pymongo()[0]["location"] == \
-            {
-                "type": "Point",
-                "coordinates": [24.946861267089844, 60.16311983618494],
-            }
+        assert qs.as_pymongo()[0]["location"] == {
+            "type": "Point",
+            "coordinates": [24.946861267089844, 60.16311983618494],
+        }
 
     def test_2dsphere_point_sets_correctly(self):
         class Location(Document):
@@ -536,13 +535,17 @@ class TestGeoQueries(MongoDBTestCase):
 
         Location(poly=[[[40, 5], [40, 6], [41, 6], [40, 5]]]).save()
         loc = Location.objects.as_pymongo()[0]
-        assert loc["poly"] == \
-            {"type": "Polygon", "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]]}
+        assert loc["poly"] == {
+            "type": "Polygon",
+            "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
+        }
 
         Location.objects.update(set__poly=[[[40, 4], [40, 6], [41, 6], [40, 4]]])
         loc = Location.objects.as_pymongo()[0]
-        assert loc["poly"] == \
-            {"type": "Polygon", "coordinates": [[[40, 4], [40, 6], [41, 6], [40, 4]]]}
+        assert loc["poly"] == {
+            "type": "Polygon",
+            "coordinates": [[[40, 4], [40, 6], [41, 6], [40, 4]]],
+        }
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ mongomock = "*"
 mock = "*"
 flake8 = "*"
 isort = "*"
+black = "*"
 
 [packages]
 pymongo = "*"
@@ -17,3 +18,6 @@ blinker = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

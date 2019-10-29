@@ -78,7 +78,7 @@ class TestField(MongoDBTestCase):
         assert data_to_be_saved == ["age", "created", "day", "name", "userid"]
 
     def test_custom_field_validation_raise_deprecated_error_when_validation_return_something(
-        self
+        self,
     ):
         # Covers introduction of a breaking change in the validation parameter (0.18)
         def _not_empty(z):
@@ -191,7 +191,7 @@ class TestField(MongoDBTestCase):
         assert data_to_be_saved == ["age", "created", "userid"]
 
     def test_default_value_is_not_used_when_changing_value_to_empty_list_for_strict_doc(
-        self
+        self,
     ):
         """List field with default can be set to the empty list (strict)"""
         # Issue #1733
@@ -205,7 +205,7 @@ class TestField(MongoDBTestCase):
         assert reloaded.x == []
 
     def test_default_value_is_not_used_when_changing_value_to_empty_list_for_dyn_doc(
-        self
+        self,
     ):
         """List field with default can be set to the empty list (dynamic)"""
         # Issue #1733

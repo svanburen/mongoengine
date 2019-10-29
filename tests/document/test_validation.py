@@ -63,8 +63,10 @@ class TestValidatorError(MongoDBTestCase):
             User().validate()
         except ValidationError as e:
             assert "User:None" in e.message
-            assert e.to_dict() == \
-                {"username": "Field is required", "name": "Field is required"}
+            assert e.to_dict() == {
+                "username": "Field is required",
+                "name": "Field is required",
+            }
 
         user = User(username="RossC0", name="Ross").save()
         user.name = None

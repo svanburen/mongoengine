@@ -111,8 +111,12 @@ class TestDynamicDocument(MongoDBTestCase):
         p.newattr = "garbage"
         p.save()
         raw_p = Person.objects.as_pymongo().get(id=p.id)
-        assert raw_p == \
-            {"_cls": "Person", "_id": p.id, "name": "OldDean", "newattr": "garbage"}
+        assert raw_p == {
+            "_cls": "Person",
+            "_id": p.id,
+            "name": "OldDean",
+            "newattr": "garbage",
+        }
 
     def test_fields_containing_underscore(self):
         """Ensure we can query dynamic fields"""
@@ -249,16 +253,15 @@ class TestDynamicDocument(MongoDBTestCase):
         embedded_1.list_field = ["1", 2, {"hello": "world"}]
         doc.embedded_field = embedded_1
 
-        assert doc.to_mongo() == \
-            {
-                "embedded_field": {
-                    "_cls": "Embedded",
-                    "string_field": "hello",
-                    "int_field": 1,
-                    "dict_field": {"hello": "world"},
-                    "list_field": ["1", 2, {"hello": "world"}],
-                }
+        assert doc.to_mongo() == {
+            "embedded_field": {
+                "_cls": "Embedded",
+                "string_field": "hello",
+                "int_field": 1,
+                "dict_field": {"hello": "world"},
+                "list_field": ["1", 2, {"hello": "world"}],
             }
+        }
         doc.save()
 
         doc = Doc.objects.first()
@@ -294,26 +297,25 @@ class TestDynamicDocument(MongoDBTestCase):
         embedded_1.list_field = ["1", 2, embedded_2]
         doc.embedded_field = embedded_1
 
-        assert doc.to_mongo() == \
-            {
-                "embedded_field": {
-                    "_cls": "Embedded",
-                    "string_field": "hello",
-                    "int_field": 1,
-                    "dict_field": {"hello": "world"},
-                    "list_field": [
-                        "1",
-                        2,
-                        {
-                            "_cls": "Embedded",
-                            "string_field": "hello",
-                            "int_field": 1,
-                            "dict_field": {"hello": "world"},
-                            "list_field": ["1", 2, {"hello": "world"}],
-                        },
-                    ],
-                }
+        assert doc.to_mongo() == {
+            "embedded_field": {
+                "_cls": "Embedded",
+                "string_field": "hello",
+                "int_field": 1,
+                "dict_field": {"hello": "world"},
+                "list_field": [
+                    "1",
+                    2,
+                    {
+                        "_cls": "Embedded",
+                        "string_field": "hello",
+                        "int_field": 1,
+                        "dict_field": {"hello": "world"},
+                        "list_field": ["1", 2, {"hello": "world"}],
+                    },
+                ],
             }
+        }
         doc.save()
         doc = Doc.objects.first()
         assert doc.embedded_field.__class__ == Embedded
@@ -377,8 +379,10 @@ class TestDynamicDocument(MongoDBTestCase):
         ).save()
 
         assert Person.objects.first().address.street_number == "1337"
-        assert Person.objects.only("address__street_number").first().address.street_number == \
-            "1337"
+        assert (
+            Person.objects.only("address__street_number").first().address.street_number
+            == "1337"
+        )
 
     def test_dynamic_and_embedded_dict_access(self):
         """Ensure embedded dynamic documents work with dict[] style access"""

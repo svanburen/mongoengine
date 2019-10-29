@@ -153,41 +153,39 @@ class TestDelta(MongoDBTestCase):
         doc.embedded_field.list_field = ["1", 2, embedded_2]
         assert doc._get_changed_fields() == ["embedded_field.list_field"]
 
-        assert doc.embedded_field._delta() == \
-            (
-                {
-                    "list_field": [
-                        "1",
-                        2,
-                        {
-                            "_cls": "Embedded",
-                            "string_field": "hello",
-                            "dict_field": {"hello": "world"},
-                            "int_field": 1,
-                            "list_field": ["1", 2, {"hello": "world"}],
-                        },
-                    ]
-                },
-                {},
-            )
+        assert doc.embedded_field._delta() == (
+            {
+                "list_field": [
+                    "1",
+                    2,
+                    {
+                        "_cls": "Embedded",
+                        "string_field": "hello",
+                        "dict_field": {"hello": "world"},
+                        "int_field": 1,
+                        "list_field": ["1", 2, {"hello": "world"}],
+                    },
+                ]
+            },
+            {},
+        )
 
-        assert doc._delta() == \
-            (
-                {
-                    "embedded_field.list_field": [
-                        "1",
-                        2,
-                        {
-                            "_cls": "Embedded",
-                            "string_field": "hello",
-                            "dict_field": {"hello": "world"},
-                            "int_field": 1,
-                            "list_field": ["1", 2, {"hello": "world"}],
-                        },
-                    ]
-                },
-                {},
-            )
+        assert doc._delta() == (
+            {
+                "embedded_field.list_field": [
+                    "1",
+                    2,
+                    {
+                        "_cls": "Embedded",
+                        "string_field": "hello",
+                        "dict_field": {"hello": "world"},
+                        "int_field": 1,
+                        "list_field": ["1", 2, {"hello": "world"}],
+                    },
+                ]
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
 
@@ -198,8 +196,14 @@ class TestDelta(MongoDBTestCase):
 
         doc.embedded_field.list_field[2].string_field = "world"
         assert doc._get_changed_fields() == ["embedded_field.list_field.2.string_field"]
-        assert doc.embedded_field._delta() == ({"list_field.2.string_field": "world"}, {})
-        assert doc._delta() == ({"embedded_field.list_field.2.string_field": "world"}, {})
+        assert doc.embedded_field._delta() == (
+            {"list_field.2.string_field": "world"},
+            {},
+        )
+        assert doc._delta() == (
+            {"embedded_field.list_field.2.string_field": "world"},
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].string_field == "world"
@@ -208,49 +212,48 @@ class TestDelta(MongoDBTestCase):
         doc.embedded_field.list_field[2].string_field = "hello world"
         doc.embedded_field.list_field[2] = doc.embedded_field.list_field[2]
         assert doc._get_changed_fields() == ["embedded_field.list_field.2"]
-        assert doc.embedded_field._delta() == \
-            (
-                {
-                    "list_field.2": {
-                        "_cls": "Embedded",
-                        "string_field": "hello world",
-                        "int_field": 1,
-                        "list_field": ["1", 2, {"hello": "world"}],
-                        "dict_field": {"hello": "world"},
-                    }
-                },
-                {},
-            )
-        assert doc._delta() == \
-            (
-                {
-                    "embedded_field.list_field.2": {
-                        "_cls": "Embedded",
-                        "string_field": "hello world",
-                        "int_field": 1,
-                        "list_field": ["1", 2, {"hello": "world"}],
-                        "dict_field": {"hello": "world"},
-                    }
-                },
-                {},
-            )
+        assert doc.embedded_field._delta() == (
+            {
+                "list_field.2": {
+                    "_cls": "Embedded",
+                    "string_field": "hello world",
+                    "int_field": 1,
+                    "list_field": ["1", 2, {"hello": "world"}],
+                    "dict_field": {"hello": "world"},
+                }
+            },
+            {},
+        )
+        assert doc._delta() == (
+            {
+                "embedded_field.list_field.2": {
+                    "_cls": "Embedded",
+                    "string_field": "hello world",
+                    "int_field": 1,
+                    "list_field": ["1", 2, {"hello": "world"}],
+                    "dict_field": {"hello": "world"},
+                }
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].string_field == "hello world"
 
         # Test list native methods
         doc.embedded_field.list_field[2].list_field.pop(0)
-        assert doc._delta() == \
-            ({"embedded_field.list_field.2.list_field": [2, {"hello": "world"}]}, {})
+        assert doc._delta() == (
+            {"embedded_field.list_field.2.list_field": [2, {"hello": "world"}]},
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
 
         doc.embedded_field.list_field[2].list_field.append(1)
-        assert doc._delta() == \
-            (
-                {"embedded_field.list_field.2.list_field": [2, {"hello": "world"}, 1]},
-                {},
-            )
+        assert doc._delta() == (
+            {"embedded_field.list_field.2.list_field": [2, {"hello": "world"}, 1]},
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].list_field == [2, {"hello": "world"}, 1]
@@ -261,7 +264,10 @@ class TestDelta(MongoDBTestCase):
         assert doc.embedded_field.list_field[2].list_field == [1, 2, {"hello": "world"}]
 
         del doc.embedded_field.list_field[2].list_field[2]["hello"]
-        assert doc._delta() == ({}, {"embedded_field.list_field.2.list_field.2.hello": 1})
+        assert doc._delta() == (
+            {},
+            {"embedded_field.list_field.2.list_field.2.hello": 1},
+        )
         doc.save()
         doc = doc.reload(10)
 
@@ -497,41 +503,39 @@ class TestDelta(MongoDBTestCase):
 
         doc.embedded_field.list_field = ["1", 2, embedded_2]
         assert doc._get_changed_fields() == ["db_embedded_field.db_list_field"]
-        assert doc.embedded_field._delta() == \
-            (
-                {
-                    "db_list_field": [
-                        "1",
-                        2,
-                        {
-                            "_cls": "Embedded",
-                            "db_string_field": "hello",
-                            "db_dict_field": {"hello": "world"},
-                            "db_int_field": 1,
-                            "db_list_field": ["1", 2, {"hello": "world"}],
-                        },
-                    ]
-                },
-                {},
-            )
+        assert doc.embedded_field._delta() == (
+            {
+                "db_list_field": [
+                    "1",
+                    2,
+                    {
+                        "_cls": "Embedded",
+                        "db_string_field": "hello",
+                        "db_dict_field": {"hello": "world"},
+                        "db_int_field": 1,
+                        "db_list_field": ["1", 2, {"hello": "world"}],
+                    },
+                ]
+            },
+            {},
+        )
 
-        assert doc._delta() == \
-            (
-                {
-                    "db_embedded_field.db_list_field": [
-                        "1",
-                        2,
-                        {
-                            "_cls": "Embedded",
-                            "db_string_field": "hello",
-                            "db_dict_field": {"hello": "world"},
-                            "db_int_field": 1,
-                            "db_list_field": ["1", 2, {"hello": "world"}],
-                        },
-                    ]
-                },
-                {},
-            )
+        assert doc._delta() == (
+            {
+                "db_embedded_field.db_list_field": [
+                    "1",
+                    2,
+                    {
+                        "_cls": "Embedded",
+                        "db_string_field": "hello",
+                        "db_dict_field": {"hello": "world"},
+                        "db_int_field": 1,
+                        "db_list_field": ["1", 2, {"hello": "world"}],
+                    },
+                ]
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
 
@@ -541,12 +545,17 @@ class TestDelta(MongoDBTestCase):
             assert doc.embedded_field.list_field[2][k] == embedded_2[k]
 
         doc.embedded_field.list_field[2].string_field = "world"
-        assert doc._get_changed_fields() == \
-            ["db_embedded_field.db_list_field.2.db_string_field"]
-        assert doc.embedded_field._delta() == \
-            ({"db_list_field.2.db_string_field": "world"}, {})
-        assert doc._delta() == \
-            ({"db_embedded_field.db_list_field.2.db_string_field": "world"}, {})
+        assert doc._get_changed_fields() == [
+            "db_embedded_field.db_list_field.2.db_string_field"
+        ]
+        assert doc.embedded_field._delta() == (
+            {"db_list_field.2.db_string_field": "world"},
+            {},
+        )
+        assert doc._delta() == (
+            {"db_embedded_field.db_list_field.2.db_string_field": "world"},
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].string_field == "world"
@@ -555,63 +564,59 @@ class TestDelta(MongoDBTestCase):
         doc.embedded_field.list_field[2].string_field = "hello world"
         doc.embedded_field.list_field[2] = doc.embedded_field.list_field[2]
         assert doc._get_changed_fields() == ["db_embedded_field.db_list_field.2"]
-        assert doc.embedded_field._delta() == \
-            (
-                {
-                    "db_list_field.2": {
-                        "_cls": "Embedded",
-                        "db_string_field": "hello world",
-                        "db_int_field": 1,
-                        "db_list_field": ["1", 2, {"hello": "world"}],
-                        "db_dict_field": {"hello": "world"},
-                    }
-                },
-                {},
-            )
-        assert doc._delta() == \
-            (
-                {
-                    "db_embedded_field.db_list_field.2": {
-                        "_cls": "Embedded",
-                        "db_string_field": "hello world",
-                        "db_int_field": 1,
-                        "db_list_field": ["1", 2, {"hello": "world"}],
-                        "db_dict_field": {"hello": "world"},
-                    }
-                },
-                {},
-            )
+        assert doc.embedded_field._delta() == (
+            {
+                "db_list_field.2": {
+                    "_cls": "Embedded",
+                    "db_string_field": "hello world",
+                    "db_int_field": 1,
+                    "db_list_field": ["1", 2, {"hello": "world"}],
+                    "db_dict_field": {"hello": "world"},
+                }
+            },
+            {},
+        )
+        assert doc._delta() == (
+            {
+                "db_embedded_field.db_list_field.2": {
+                    "_cls": "Embedded",
+                    "db_string_field": "hello world",
+                    "db_int_field": 1,
+                    "db_list_field": ["1", 2, {"hello": "world"}],
+                    "db_dict_field": {"hello": "world"},
+                }
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].string_field == "hello world"
 
         # Test list native methods
         doc.embedded_field.list_field[2].list_field.pop(0)
-        assert doc._delta() == \
-            (
-                {
-                    "db_embedded_field.db_list_field.2.db_list_field": [
-                        2,
-                        {"hello": "world"},
-                    ]
-                },
-                {},
-            )
+        assert doc._delta() == (
+            {
+                "db_embedded_field.db_list_field.2.db_list_field": [
+                    2,
+                    {"hello": "world"},
+                ]
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
 
         doc.embedded_field.list_field[2].list_field.append(1)
-        assert doc._delta() == \
-            (
-                {
-                    "db_embedded_field.db_list_field.2.db_list_field": [
-                        2,
-                        {"hello": "world"},
-                        1,
-                    ]
-                },
-                {},
-            )
+        assert doc._delta() == (
+            {
+                "db_embedded_field.db_list_field.2.db_list_field": [
+                    2,
+                    {"hello": "world"},
+                    1,
+                ]
+            },
+            {},
+        )
         doc.save()
         doc = doc.reload(10)
         assert doc.embedded_field.list_field[2].list_field == [2, {"hello": "world"}, 1]
@@ -622,13 +627,18 @@ class TestDelta(MongoDBTestCase):
         assert doc.embedded_field.list_field[2].list_field == [1, 2, {"hello": "world"}]
 
         del doc.embedded_field.list_field[2].list_field[2]["hello"]
-        assert doc._delta() == \
-            ({}, {"db_embedded_field.db_list_field.2.db_list_field.2.hello": 1})
+        assert doc._delta() == (
+            {},
+            {"db_embedded_field.db_list_field.2.db_list_field.2.hello": 1},
+        )
         doc.save()
         doc = doc.reload(10)
 
         del doc.embedded_field.list_field[2].list_field
-        assert doc._delta() == ({}, {"db_embedded_field.db_list_field.2.db_list_field": 1})
+        assert doc._delta() == (
+            {},
+            {"db_embedded_field.db_list_field.2.db_list_field": 1},
+        )
 
     def test_delta_for_dynamic_documents(self):
         class Person(DynamicDocument):
@@ -638,11 +648,17 @@ class TestDelta(MongoDBTestCase):
         Person.drop_collection()
 
         p = Person(name="James", age=34)
-        assert p._delta() == (SON([("_cls", "Person"), ("name", "James"), ("age", 34)]), {})
+        assert p._delta() == (
+            SON([("_cls", "Person"), ("name", "James"), ("age", 34)]),
+            {},
+        )
 
         p.doc = 123
         del p.doc
-        assert p._delta() == (SON([("_cls", "Person"), ("name", "James"), ("age", 34)]), {})
+        assert p._delta() == (
+            SON([("_cls", "Person"), ("name", "James"), ("age", 34)]),
+            {},
+        )
 
         p = Person()
         p.name = "Dean"

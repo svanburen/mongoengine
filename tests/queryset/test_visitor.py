@@ -113,13 +113,12 @@ class TestQ(unittest.TestCase):
 
         query = Q(x__gt=0) | Q(x__exists=False)
         query &= Q(x__lt=100)
-        assert query.to_query(TestDoc) == \
-            {
-                "$and": [
-                    {"$or": [{"x": {"$gt": 0}}, {"x": {"$exists": False}}]},
-                    {"x": {"$lt": 100}},
-                ]
-            }
+        assert query.to_query(TestDoc) == {
+            "$and": [
+                {"$or": [{"x": {"$gt": 0}}, {"x": {"$exists": False}}]},
+                {"x": {"$lt": 100}},
+            ]
+        }
 
         q1 = Q(x__gt=0) | Q(x__exists=False)
         q2 = Q(x__lt=100) | Q(y=True)
@@ -129,13 +128,12 @@ class TestQ(unittest.TestCase):
         TestDoc(x=10).save()
         TestDoc(y=True).save()
 
-        assert query == \
-            {
-                "$and": [
-                    {"$or": [{"x": {"$gt": 0}}, {"x": {"$exists": False}}]},
-                    {"$or": [{"x": {"$lt": 100}}, {"y": True}]},
-                ]
-            }
+        assert query == {
+            "$and": [
+                {"$or": [{"x": {"$gt": 0}}, {"x": {"$exists": False}}]},
+                {"$or": [{"x": {"$lt": 100}}, {"y": True}]},
+            ]
+        }
         assert 2 == TestDoc.objects(q1 & q2).count()
 
     def test_or_and_or_combination(self):
@@ -156,23 +154,22 @@ class TestQ(unittest.TestCase):
         q2 = Q(x__lt=100) & (Q(y=False) | Q(y__exists=False))
         query = (q1 | q2).to_query(TestDoc)
 
-        assert query == \
-            {
-                "$or": [
-                    {
-                        "$and": [
-                            {"x": {"$gt": 0}},
-                            {"$or": [{"y": True}, {"y": {"$exists": False}}]},
-                        ]
-                    },
-                    {
-                        "$and": [
-                            {"x": {"$lt": 100}},
-                            {"$or": [{"y": False}, {"y": {"$exists": False}}]},
-                        ]
-                    },
-                ]
-            }
+        assert query == {
+            "$or": [
+                {
+                    "$and": [
+                        {"x": {"$gt": 0}},
+                        {"$or": [{"y": True}, {"y": {"$exists": False}}]},
+                    ]
+                },
+                {
+                    "$and": [
+                        {"x": {"$lt": 100}},
+                        {"$or": [{"y": False}, {"y": {"$exists": False}}]},
+                    ]
+                },
+            ]
+        }
         assert 2 == TestDoc.objects(q1 | q2).count()
 
     def test_multiple_occurence_in_field(self):
@@ -313,11 +310,15 @@ class TestQ(unittest.TestCase):
         assert repr(Q()) == "Q(**{})"
         assert repr(Q(name="test")) == "Q(**{'name': 'test'})"
 
-        assert repr(Q(name="test") & Q(age__gte=18)) == \
-            "(Q(**{'name': 'test'}) & Q(**{'age__gte': 18}))"
+        assert (
+            repr(Q(name="test") & Q(age__gte=18))
+            == "(Q(**{'name': 'test'}) & Q(**{'age__gte': 18}))"
+        )
 
-        assert repr(Q(name="test") | Q(age__gte=18)) == \
-            "(Q(**{'name': 'test'}) | Q(**{'age__gte': 18}))"
+        assert (
+            repr(Q(name="test") | Q(age__gte=18))
+            == "(Q(**{'name': 'test'}) | Q(**{'age__gte': 18}))"
+        )
 
     def test_q_lists(self):
         """Ensure that Q objects query ListFields correctly.
@@ -345,11 +346,13 @@ class TestQ(unittest.TestCase):
         pk = ObjectId()
         User(email="example@example.com", pk=pk).save()
 
-        assert 1 == \
-            User.objects.filter(Q(email="example@example.com") | Q(name="John Doe")) \
-            .limit(2) \
-            .filter(pk=pk) \
+        assert (
+            1
+            == User.objects.filter(Q(email="example@example.com") | Q(name="John Doe"))
+            .limit(2)
+            .filter(pk=pk)
             .count()
+        )
 
     def test_chained_q_or_filtering(self):
         class Post(EmbeddedDocument):
@@ -364,11 +367,13 @@ class TestQ(unittest.TestCase):
         Item(postables=[Post(name="a"), Post(name="c")]).save()
         Item(postables=[Post(name="a"), Post(name="b"), Post(name="c")]).save()
 
-        assert Item.objects(Q(postables__name="a") & Q(postables__name="b")).count() == 2
-        assert Item.objects.filter(postables__name="a") \
-            .filter(postables__name="b") \
-            .count() == \
-            2
+        assert (
+            Item.objects(Q(postables__name="a") & Q(postables__name="b")).count() == 2
+        )
+        assert (
+            Item.objects.filter(postables__name="a").filter(postables__name="b").count()
+            == 2
+        )
 
 
 if __name__ == "__main__":

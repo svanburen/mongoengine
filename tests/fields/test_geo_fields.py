@@ -386,8 +386,10 @@ class TestGeoField(MongoDBTestCase):
         Log.ensure_indexes()
 
         info = Log._get_collection().index_information()
-        assert info["location_2dsphere_datetime_1"]["key"] == \
-            [("location", "2dsphere"), ("datetime", 1)]
+        assert info["location_2dsphere_datetime_1"]["key"] == [
+            ("location", "2dsphere"),
+            ("datetime", 1),
+        ]
 
         # Test listing explicitly
         class Log(Document):
@@ -404,8 +406,10 @@ class TestGeoField(MongoDBTestCase):
         Log.ensure_indexes()
 
         info = Log._get_collection().index_information()
-        assert info["location_2dsphere_datetime_1"]["key"] == \
-            [("location", "2dsphere"), ("datetime", 1)]
+        assert info["location_2dsphere_datetime_1"]["key"] == [
+            ("location", "2dsphere"),
+            ("datetime", 1),
+        ]
 
 
 if __name__ == "__main__":

@@ -130,7 +130,10 @@ class TestOnlyExcludeAll(unittest.TestCase):
         assert qs._loaded_fields.as_dict() == {"b": {"$slice": 5}, "c": 1}
 
         qs = qs.fields(slice__c=[5, 1])
-        assert qs._loaded_fields.as_dict() == {"b": {"$slice": 5}, "c": {"$slice": [5, 1]}}
+        assert qs._loaded_fields.as_dict() == {
+            "b": {"$slice": 5},
+            "c": {"$slice": [5, 1]},
+        }
 
         qs = qs.exclude("c")
         assert qs._loaded_fields.as_dict() == {"b": {"$slice": 5}}

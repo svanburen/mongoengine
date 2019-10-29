@@ -13,8 +13,6 @@ except ImportError:
     dateutil = None
 
 
-
-
 class TestDateField(MongoDBTestCase):
     def test_date_from_empty_string(self):
         """

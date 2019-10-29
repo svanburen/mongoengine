@@ -118,10 +118,12 @@ class TestMapField(MongoDBTestCase):
 
         assert 1 == Log.objects(visited__friends__exists=True).count()
 
-        assert 1 == \
-            Log.objects(
+        assert (
+            1
+            == Log.objects(
                 actions__friends__operation="drink", actions__friends__object="beer"
             ).count()
+        )
 
     def test_map_field_unicode(self):
         class Info(EmbeddedDocument):
@@ -137,5 +139,7 @@ class TestMapField(MongoDBTestCase):
 
         tree.save()
 
-        assert BlogPost.objects.get(id=tree.id).info_dict["éééé"].description == \
-            "VALUE: éééé"
+        assert (
+            BlogPost.objects.get(id=tree.id).info_dict["éééé"].description
+            == "VALUE: éééé"
+        )

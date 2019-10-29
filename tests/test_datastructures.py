@@ -21,8 +21,8 @@ class TestBaseDict(unittest.TestCase):
         fake_doc = DocumentStub()
         base_list = BaseDict(dict_items, instance=None, name="my_name")
         base_list._instance = (
-            fake_doc
-        )  # hack to inject the mock, it does not work in the constructor
+            fake_doc  # hack to inject the mock, it does not work in the constructor
+        )
         return base_list
 
     def test___init___(self):
@@ -157,8 +157,8 @@ class TestBaseList(unittest.TestCase):
         fake_doc = DocumentStub()
         base_list = BaseList(list_items, instance=None, name="my_name")
         base_list._instance = (
-            fake_doc
-        )  # hack to inject the mock, it does not work in the constructor
+            fake_doc  # hack to inject the mock, it does not work in the constructor
+        )
         return base_list
 
     def test___init___(self):

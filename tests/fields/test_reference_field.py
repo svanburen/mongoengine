@@ -84,8 +84,9 @@ class TestReferenceField(MongoDBTestCase):
         p1 = Person(name="John").save()
         Person(name="Ross", parent=p1).save()
 
-        assert Person._get_collection().find_one({"name": "Ross"})["parent"] == \
-            DBRef("person", p1.pk)
+        assert Person._get_collection().find_one({"name": "Ross"})["parent"] == DBRef(
+            "person", p1.pk
+        )
 
         p = Person.objects.get(name="Ross")
         assert p.parent == p1

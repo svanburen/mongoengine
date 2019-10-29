@@ -467,8 +467,10 @@ class FieldTest(unittest.TestCase):
         anna.other.name = "Anna's friends"
         anna.save()
 
-        assert "[<Person: Paul>, <Person: Maria>, <Person: Julia>, <Person: Anna>]" == \
-            "%s" % Person.objects()
+        assert (
+            "[<Person: Paul>, <Person: Maria>, <Person: Julia>, <Person: Anna>]"
+            == "%s" % Person.objects()
+        )
 
     def test_generic_reference(self):
         class UserA(Document):

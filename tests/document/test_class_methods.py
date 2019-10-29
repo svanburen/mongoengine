@@ -29,8 +29,9 @@ class TestClassMethods(unittest.TestCase):
         """Ensure that document may be defined using fields.
         """
         assert ["_cls", "age", "id", "name"] == sorted(self.Person._fields.keys())
-        assert ["IntField", "ObjectIdField", "StringField", "StringField"] == \
-            sorted([x.__class__.__name__ for x in self.Person._fields.values()])
+        assert ["IntField", "ObjectIdField", "StringField", "StringField"] == sorted(
+            [x.__class__.__name__ for x in self.Person._fields.values()]
+        )
 
     def test_get_db(self):
         """Ensure that get_db returns the expected db.
@@ -94,15 +95,19 @@ class TestClassMethods(unittest.TestCase):
         assert BlogPost.compare_indexes() == {"missing": [], "extra": []}
 
         BlogPost.ensure_index(["author", "description"])
-        assert BlogPost.compare_indexes() == \
-            {"missing": [], "extra": [[("author", 1), ("description", 1)]]}
+        assert BlogPost.compare_indexes() == {
+            "missing": [],
+            "extra": [[("author", 1), ("description", 1)]],
+        }
 
         BlogPost._get_collection().drop_index("author_1_description_1")
         assert BlogPost.compare_indexes() == {"missing": [], "extra": []}
 
         BlogPost._get_collection().drop_index("author_1_title_1")
-        assert BlogPost.compare_indexes() == \
-            {"missing": [[("author", 1), ("title", 1)]], "extra": []}
+        assert BlogPost.compare_indexes() == {
+            "missing": [[("author", 1), ("title", 1)]],
+            "extra": [],
+        }
 
     def test_compare_indexes_inheritance(self):
         """ Ensure that the indexes are properly created and that
@@ -130,15 +135,19 @@ class TestClassMethods(unittest.TestCase):
         assert BlogPost.compare_indexes() == {"missing": [], "extra": []}
 
         BlogPostWithTags.ensure_index(["author", "tag_list"])
-        assert BlogPost.compare_indexes() == \
-            {"missing": [], "extra": [[("_cls", 1), ("author", 1), ("tag_list", 1)]]}
+        assert BlogPost.compare_indexes() == {
+            "missing": [],
+            "extra": [[("_cls", 1), ("author", 1), ("tag_list", 1)]],
+        }
 
         BlogPostWithTags._get_collection().drop_index("_cls_1_author_1_tag_list_1")
         assert BlogPost.compare_indexes() == {"missing": [], "extra": []}
 
         BlogPostWithTags._get_collection().drop_index("_cls_1_author_1_tags_1")
-        assert BlogPost.compare_indexes() == \
-            {"missing": [[("_cls", 1), ("author", 1), ("tags", 1)]], "extra": []}
+        assert BlogPost.compare_indexes() == {
+            "missing": [[("_cls", 1), ("author", 1), ("tags", 1)]],
+            "extra": [],
+        }
 
     def test_compare_indexes_multiple_subclasses(self):
         """ Ensure that compare_indexes behaves correctly if called from a
@@ -223,13 +232,12 @@ class TestClassMethods(unittest.TestCase):
 
         assert BlogPost.list_indexes() == BlogPostWithTags.list_indexes()
         assert BlogPost.list_indexes() == BlogPostWithTagsAndExtraText.list_indexes()
-        assert BlogPost.list_indexes() == \
-            [
-                [("_cls", 1), ("author", 1), ("tags", 1)],
-                [("_cls", 1), ("author", 1), ("tags", 1), ("extra_text", 1)],
-                [("_id", 1)],
-                [("_cls", 1)],
-            ]
+        assert BlogPost.list_indexes() == [
+            [("_cls", 1), ("author", 1), ("tags", 1)],
+            [("_cls", 1), ("author", 1), ("tags", 1), ("extra_text", 1)],
+            [("_id", 1)],
+            [("_cls", 1)],
+        ]
 
     def test_register_delete_rule_inherited(self):
         class Vaccine(Document):
@@ -291,7 +299,10 @@ class TestClassMethods(unittest.TestCase):
         class OldMixinNamingConvention(Document, BaseMixin):
             pass
 
-        assert "oldmixinnamingconvention" == OldMixinNamingConvention._get_collection_name()
+        assert (
+            "oldmixinnamingconvention"
+            == OldMixinNamingConvention._get_collection_name()
+        )
 
         class BaseMixin:
             meta = {"collection": lambda c: c.__name__.lower()}

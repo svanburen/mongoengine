@@ -32,7 +32,6 @@ class ConnectionFailure(Exception):
     """
 
 
-
 def _check_db_name(name):
     """Check if a database name is valid.
     This functionality is copied from pymongo Database class constructor.
@@ -53,7 +52,7 @@ def _get_connection_settings(
     password=None,
     authentication_source=None,
     authentication_mechanism=None,
-    **kwargs
+    **kwargs,
 ):
     """Get the connection settings as a dict
 
@@ -178,7 +177,7 @@ def register_connection(
     password=None,
     authentication_source=None,
     authentication_mechanism=None,
-    **kwargs
+    **kwargs,
 ):
     """Register the connection settings.
 
@@ -213,7 +212,7 @@ def register_connection(
         password=password,
         authentication_source=authentication_source,
         authentication_mechanism=authentication_mechanism,
-        **kwargs
+        **kwargs,
     )
     _connection_settings[alias] = conn_settings
 

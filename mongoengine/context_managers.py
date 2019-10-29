@@ -246,8 +246,8 @@ class query_counter:
             - self._ctx_query_counter
         )
         self._ctx_query_counter += (
-            1
-        )  # Account for the query we just issued to gather the information
+            1  # Account for the query we just issued to gather the information
+        )
         return count
 
 

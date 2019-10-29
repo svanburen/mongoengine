@@ -241,8 +241,10 @@ class TestSequenceField(MongoDBTestCase):
         foo.save()
 
         assert "base.counter" in self.db["mongoengine.counters"].find().distinct("_id")
-        assert not (("foo.counter" or "bar.counter")
-            in self.db["mongoengine.counters"].find().distinct("_id"))
+        assert not (
+            ("foo.counter" or "bar.counter")
+            in self.db["mongoengine.counters"].find().distinct("_id")
+        )
         assert foo.counter != bar.counter
         assert foo._fields["counter"].owner_document == Base
         assert bar._fields["counter"].owner_document == Base
@@ -264,9 +266,12 @@ class TestSequenceField(MongoDBTestCase):
         foo = Foo(name="Foo")
         foo.save()
 
-        assert not ("base.counter" in self.db["mongoengine.counters"].find().distinct("_id"))
-        assert ("foo.counter" and "bar.counter") \
-            in self.db["mongoengine.counters"].find().distinct("_id")
+        assert not (
+            "base.counter" in self.db["mongoengine.counters"].find().distinct("_id")
+        )
+        assert ("foo.counter" and "bar.counter") in self.db[
+            "mongoengine.counters"
+        ].find().distinct("_id")
         assert foo.counter == bar.counter
         assert foo._fields["counter"].owner_document == Foo
         assert bar._fields["counter"].owner_document == Bar

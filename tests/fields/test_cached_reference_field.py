@@ -88,8 +88,11 @@ class TestCachedReferenceField(MongoDBTestCase):
         s = SocialTest(group="dev", person=p)
         s.save()
 
-        assert SocialTest.objects._collection.find_one({"person.salary": 7000.00}) == \
-            {"_id": s.pk, "group": s.group, "person": {"_id": p.pk, "salary": 7000.00}}
+        assert SocialTest.objects._collection.find_one({"person.salary": 7000.00}) == {
+            "_id": s.pk,
+            "group": s.group,
+            "person": {"_id": p.pk, "salary": 7000.00},
+        }
 
     def test_cached_reference_field_reference(self):
         class Group(Document):
@@ -129,13 +132,12 @@ class TestCachedReferenceField(MongoDBTestCase):
         s2 = SocialData(obs="testing 321", person=p3, tags=["tag3", "tag4"])
         s2.save()
 
-        assert SocialData.objects._collection.find_one({"tags": "tag2"}) == \
-            {
-                "_id": s1.pk,
-                "obs": "testing 123",
-                "tags": ["tag1", "tag2"],
-                "person": {"_id": p1.pk, "group": g1.pk},
-            }
+        assert SocialData.objects._collection.find_one({"tags": "tag2"}) == {
+            "_id": s1.pk,
+            "obs": "testing 123",
+            "tags": ["tag1", "tag2"],
+            "person": {"_id": p1.pk, "group": g1.pk},
+        }
 
         assert SocialData.objects(person__group=g2).count() == 1
         assert SocialData.objects(person__group=g2).first() == s2
@@ -153,22 +155,20 @@ class TestCachedReferenceField(MongoDBTestCase):
         product1 = Product(name="abc").save()
         product2 = Product(name="def").save()
         basket = Basket(products=[product1]).save()
-        assert Basket.objects._collection.find_one() == \
-            {
-                "_id": basket.pk,
-                "products": [{"_id": product1.pk, "name": product1.name}],
-            }
+        assert Basket.objects._collection.find_one() == {
+            "_id": basket.pk,
+            "products": [{"_id": product1.pk, "name": product1.name}],
+        }
         # push to list
         basket.update(push__products=product2)
         basket.reload()
-        assert Basket.objects._collection.find_one() == \
-            {
-                "_id": basket.pk,
-                "products": [
-                    {"_id": product1.pk, "name": product1.name},
-                    {"_id": product2.pk, "name": product2.name},
-                ],
-            }
+        assert Basket.objects._collection.find_one() == {
+            "_id": basket.pk,
+            "products": [
+                {"_id": product1.pk, "name": product1.name},
+                {"_id": product2.pk, "name": product2.name},
+            ],
+        }
 
     def test_cached_reference_field_update_all(self):
         class Person(Document):
@@ -188,13 +188,12 @@ class TestCachedReferenceField(MongoDBTestCase):
         a2 = Person.objects.with_id(a2.id)
         assert a2.father.tp == a1.tp
 
-        assert dict(a2.to_mongo()) == \
-            {
-                "_id": a2.pk,
-                "name": "Wilson Junior",
-                "tp": "pf",
-                "father": {"_id": a1.pk, "tp": "pj"},
-            }
+        assert dict(a2.to_mongo()) == {
+            "_id": a2.pk,
+            "name": "Wilson Junior",
+            "tp": "pf",
+            "father": {"_id": a1.pk, "tp": "pj"},
+        }
 
         assert Person.objects(father=a1)._query == {"father._id": a1.pk}
         assert Person.objects(father=a1).count() == 1
@@ -203,13 +202,12 @@ class TestCachedReferenceField(MongoDBTestCase):
         Person.father.sync_all()
 
         a2.reload()
-        assert dict(a2.to_mongo()) == \
-            {
-                "_id": a2.pk,
-                "name": "Wilson Junior",
-                "tp": "pf",
-                "father": {"_id": a1.pk, "tp": "pf"},
-            }
+        assert dict(a2.to_mongo()) == {
+            "_id": a2.pk,
+            "name": "Wilson Junior",
+            "tp": "pf",
+            "father": {"_id": a1.pk, "tp": "pf"},
+        }
 
     def test_cached_reference_fields_on_embedded_documents(self):
         with pytest.raises(InvalidDocumentError):
@@ -243,13 +241,12 @@ class TestCachedReferenceField(MongoDBTestCase):
         a1.save()
 
         a2.reload()
-        assert dict(a2.to_mongo()) == \
-            {
-                "_id": a2.pk,
-                "name": "Wilson Junior",
-                "tp": "pf",
-                "father": {"_id": a1.pk, "tp": "pf"},
-            }
+        assert dict(a2.to_mongo()) == {
+            "_id": a2.pk,
+            "name": "Wilson Junior",
+            "tp": "pf",
+            "father": {"_id": a1.pk, "tp": "pf"},
+        }
 
     def test_cached_reference_auto_sync_disabled(self):
         class Persone(Document):
@@ -270,13 +267,12 @@ class TestCachedReferenceField(MongoDBTestCase):
         a1.tp = "pf"
         a1.save()
 
-        assert Persone.objects._collection.find_one({"_id": a2.pk}) == \
-            {
-                "_id": a2.pk,
-                "name": "Wilson Junior",
-                "tp": "pf",
-                "father": {"_id": a1.pk, "tp": "pj"},
-            }
+        assert Persone.objects._collection.find_one({"_id": a2.pk}) == {
+            "_id": a2.pk,
+            "name": "Wilson Junior",
+            "tp": "pf",
+            "father": {"_id": a1.pk, "tp": "pj"},
+        }
 
     def test_cached_reference_embedded_fields(self):
         class Owner(EmbeddedDocument):
@@ -304,8 +300,11 @@ class TestCachedReferenceField(MongoDBTestCase):
 
         o = Ocorrence(person="teste", animal=a)
         o.save()
-        assert dict(a.to_mongo(fields=["tag", "owner.tp"])) == \
-            {"_id": a.pk, "tag": "heavy", "owner": {"t": "u"}}
+        assert dict(a.to_mongo(fields=["tag", "owner.tp"])) == {
+            "_id": a.pk,
+            "tag": "heavy",
+            "owner": {"t": "u"},
+        }
         assert o.to_mongo()["animal"]["tag"] == "heavy"
         assert o.to_mongo()["animal"]["owner"]["t"] == "u"
 
@@ -352,8 +351,11 @@ class TestCachedReferenceField(MongoDBTestCase):
 
         o = Ocorrence(person="teste 2", animal=a)
         o.save()
-        assert dict(a.to_mongo(fields=["tag", "owner.tags"])) == \
-            {"_id": a.pk, "tag": "heavy", "owner": {"tags": ["cool", "funny"]}}
+        assert dict(a.to_mongo(fields=["tag", "owner.tags"])) == {
+            "_id": a.pk,
+            "tag": "heavy",
+            "owner": {"tags": ["cool", "funny"]},
+        }
 
         assert o.to_mongo()["animal"]["tag"] == "heavy"
         assert o.to_mongo()["animal"]["owner"]["tags"] == ["cool", "funny"]

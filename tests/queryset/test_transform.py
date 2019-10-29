@@ -16,9 +16,12 @@ class TestTransform(unittest.TestCase):
         """
         assert transform.query(name="test", age=30) == {"name": "test", "age": 30}
         assert transform.query(age__lt=30) == {"age": {"$lt": 30}}
-        assert transform.query(age__gt=20, age__lt=50) == {"age": {"$gt": 20, "$lt": 50}}
-        assert transform.query(age=20, age__gt=50) == \
-            {"$and": [{"age": {"$gt": 50}}, {"age": 20}]}
+        assert transform.query(age__gt=20, age__lt=50) == {
+            "age": {"$gt": 20, "$lt": 50}
+        }
+        assert transform.query(age=20, age__gt=50) == {
+            "$and": [{"age": {"$gt": 50}}, {"age": 20}]
+        }
         assert transform.query(friend__age__gte=30) == {"friend.age": {"$gte": 30}}
         assert transform.query(name__exists=True) == {"name": {"$exists": True}}
 
@@ -104,8 +107,10 @@ class TestTransform(unittest.TestCase):
         assert "_id" in BlogPost.objects(pk=post.id)._query
         assert BlogPost.objects(pk=post.id).count() == 1
 
-        assert "postComments.commentContent" in \
-            BlogPost.objects(comments__content="test")._query
+        assert (
+            "postComments.commentContent"
+            in BlogPost.objects(comments__content="test")._query
+        )
         assert BlogPost.objects(comments__content="test").count() == 1
 
         BlogPost.drop_collection()
@@ -189,15 +194,11 @@ class TestTransform(unittest.TestCase):
             }
         )._query
 
-        assert raw_query == \
-            {
-                "deleted": False,
-                "scraped": "yes",
-                "$nor": [
-                    {"views.extracted": "no"},
-                    {"attachments.views.extracted": "no"},
-                ],
-            }
+        assert raw_query == {
+            "deleted": False,
+            "scraped": "yes",
+            "$nor": [{"views.extracted": "no"}, {"attachments.views.extracted": "no"},],
+        }
 
     def test_geojson_PointField(self):
         class Location(Document):
@@ -216,14 +217,16 @@ class TestTransform(unittest.TestCase):
             line = LineStringField()
 
         update = transform.update(Location, set__line=[[1, 2], [2, 2]])
-        assert update == \
-            {"$set": {"line": {"type": "LineString", "coordinates": [[1, 2], [2, 2]]}}}
+        assert update == {
+            "$set": {"line": {"type": "LineString", "coordinates": [[1, 2], [2, 2]]}}
+        }
 
         update = transform.update(
             Location, set__line={"type": "LineString", "coordinates": [[1, 2], [2, 2]]}
         )
-        assert update == \
-            {"$set": {"line": {"type": "LineString", "coordinates": [[1, 2], [2, 2]]}}}
+        assert update == {
+            "$set": {"line": {"type": "LineString", "coordinates": [[1, 2], [2, 2]]}}
+        }
 
     def test_geojson_PolygonField(self):
         class Location(Document):
@@ -232,15 +235,14 @@ class TestTransform(unittest.TestCase):
         update = transform.update(
             Location, set__poly=[[[40, 5], [40, 6], [41, 6], [40, 5]]]
         )
-        assert update == \
-            {
-                "$set": {
-                    "poly": {
-                        "type": "Polygon",
-                        "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
-                    }
+        assert update == {
+            "$set": {
+                "poly": {
+                    "type": "Polygon",
+                    "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
                 }
             }
+        }
 
         update = transform.update(
             Location,
@@ -249,15 +251,14 @@ class TestTransform(unittest.TestCase):
                 "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
             },
         )
-        assert update == \
-            {
-                "$set": {
-                    "poly": {
-                        "type": "Polygon",
-                        "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
-                    }
+        assert update == {
+            "$set": {
+                "poly": {
+                    "type": "Polygon",
+                    "coordinates": [[[40, 5], [40, 6], [41, 6], [40, 5]]],
                 }
             }
+        }
 
     def test_type(self):
         class Doc(Document):
@@ -322,7 +323,9 @@ class TestTransform(unittest.TestCase):
 
         word = Word(word="abc", index=1)
         update = transform.update(MainDoc, pull__content__text=word)
-        assert update == {"$pull": {"content.text": SON([("word", "abc"), ("index", 1)])}}
+        assert update == {
+            "$pull": {"content.text": SON([("word", "abc"), ("index", 1)])}
+        }
 
         update = transform.update(MainDoc, pull__content__heading="xyz")
         assert update == {"$pull": {"content.heading": "xyz"}}

@@ -146,7 +146,7 @@ class ConnectionTest(unittest.TestCase):
             connect("mongoenginetest2", alias="alias1")
 
     def test_connect_fails_if_similar_connection_settings_arent_defined_the_same_way(
-        self
+        self,
     ):
         """Intended to keep the detecton function simple but robust"""
         db_name = "mongoenginetest"

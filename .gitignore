@@ -9,12 +9,3 @@ docs/_build
 build/
 dist/
 mongoengine.egg-info/
-env/
-.settings
-.project
-.pydevproject
-tests/test_bugfix.py
-htmlcov/
-venv
-venv3
-scratchpad

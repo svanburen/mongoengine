@@ -197,7 +197,7 @@ class TestTransform(unittest.TestCase):
         assert raw_query == {
             "deleted": False,
             "scraped": "yes",
-            "$nor": [{"views.extracted": "no"}, {"attachments.views.extracted": "no"},],
+            "$nor": [{"views.extracted": "no"}, {"attachments.views.extracted": "no"}],
         }
 
     def test_geojson_PointField(self):
